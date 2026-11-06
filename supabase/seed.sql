@@ -1,0 +1,1 @@
+-- Intencionalmente vazio: dados fictícios pertencem somente aos testes transacionais.
