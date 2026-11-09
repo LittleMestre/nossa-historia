@@ -1,11 +1,20 @@
 import { Link } from '@tanstack/react-router'
 import { ArrowUpRight, Search, Sparkles } from 'lucide-react'
+import { SpiralTimelineView } from './SpiralTimelineView'
 import { TimelineView } from './TimelineView'
 import type { TimelineEvent } from './timeline-model'
 
-export function TimelineExperience({ events }: { events: TimelineEvent[] }) {
+export function TimelineExperience({
+  events,
+  view = 'horizontal',
+}: {
+  events: TimelineEvent[]
+  view?: 'horizontal' | 'spiral'
+}) {
   return (
-    <div className="timeline-experience">
+    <div
+      className={`timeline-experience${view === 'spiral' ? ' is-spiral' : ''}`}
+    >
       <header className="timeline-intro">
         <div>
           <span className="eyebrow">
@@ -41,7 +50,11 @@ export function TimelineExperience({ events }: { events: TimelineEvent[] }) {
           Explorar galeria <ArrowUpRight size={17} />
         </Link>
       </div>
-      <TimelineView events={events} />
+      {view === 'spiral' ? (
+        <SpiralTimelineView events={events} />
+      ) : (
+        <TimelineView events={events} />
+      )}
       <div className="timeline-afterword">
         <span>
           As primeiras lembranças aparecerão aqui quando o espaço privado

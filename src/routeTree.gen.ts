@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DemoEspiralRouteImport } from './routes/demo-espiral'
 import { Route as DemoLinhaDoTempoRouteImport } from './routes/demo-linha-do-tempo'
 import { Route as EventosRouteImport } from './routes/eventos'
 import { Route as GaleriaRouteImport } from './routes/galeria'
@@ -20,6 +21,11 @@ import { Route as EventosEventIdRouteImport } from './routes/eventos.$eventId'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DemoEspiralRoute = DemoEspiralRouteImport.update({
+  id: '/demo-espiral',
+  path: '/demo-espiral',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DemoLinhaDoTempoRoute = DemoLinhaDoTempoRouteImport.update({
@@ -55,6 +61,7 @@ const EventosEventIdRoute = EventosEventIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/demo-espiral': typeof DemoEspiralRoute
   '/demo-linha-do-tempo': typeof DemoLinhaDoTempoRoute
   '/eventos': typeof EventosRouteWithChildren
   '/galeria': typeof GaleriaRoute
@@ -64,6 +71,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/demo-espiral': typeof DemoEspiralRoute
   '/demo-linha-do-tempo': typeof DemoLinhaDoTempoRoute
   '/eventos': typeof EventosRouteWithChildren
   '/galeria': typeof GaleriaRoute
@@ -74,6 +82,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/demo-espiral': typeof DemoEspiralRoute
   '/demo-linha-do-tempo': typeof DemoLinhaDoTempoRoute
   '/eventos': typeof EventosRouteWithChildren
   '/galeria': typeof GaleriaRoute
@@ -85,6 +94,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/demo-espiral'
     | '/demo-linha-do-tempo'
     | '/eventos'
     | '/galeria'
@@ -94,6 +104,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/demo-espiral'
     | '/demo-linha-do-tempo'
     | '/eventos'
     | '/galeria'
@@ -103,6 +114,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/demo-espiral'
     | '/demo-linha-do-tempo'
     | '/eventos'
     | '/galeria'
@@ -113,6 +125,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  DemoEspiralRoute: typeof DemoEspiralRoute
   DemoLinhaDoTempoRoute: typeof DemoLinhaDoTempoRoute
   EventosRoute: typeof EventosRouteWithChildren
   GaleriaRoute: typeof GaleriaRoute
@@ -127,6 +140,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/demo-espiral': {
+      id: '/demo-espiral'
+      path: '/demo-espiral'
+      fullPath: '/demo-espiral'
+      preLoaderRoute: typeof DemoEspiralRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/demo-linha-do-tempo': {
@@ -187,6 +207,7 @@ const EventosRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  DemoEspiralRoute: DemoEspiralRoute,
   DemoLinhaDoTempoRoute: DemoLinhaDoTempoRoute,
   EventosRoute: EventosRouteWithChildren,
   GaleriaRoute: GaleriaRoute,

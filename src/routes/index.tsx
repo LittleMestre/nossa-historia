@@ -6,5 +6,5 @@ export const Route = createFileRoute('/')({ component: HomePage })
 const events: TimelineEvent[] = []
 
 function HomePage() {
-  return <TimelineExperience events={events} />
+  return <TimelineExperience events={events} view="spiral" />
 }

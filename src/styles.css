@@ -1871,3 +1871,214 @@ h3 {
     right: 12px;
   }
 }
+
+/* ===== Linha do tempo em espiral 3D ===== */
+.timeline-experience.is-spiral .timeline-intro h1 {
+  font-size: clamp(1.8rem, 3.2vw, 2.6rem);
+}
+.timeline-experience.is-spiral .timeline-intro p,
+.timeline-experience.is-spiral .timeline-intro-aside {
+  display: none;
+}
+.spiral-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+.spiral-topbar {
+  display: flex;
+  justify-content: flex-end;
+}
+.spiral-stage {
+  position: relative;
+  height: 640px;
+  overflow: hidden;
+  border-radius: calc(var(--radius) * 2);
+  background: radial-gradient(
+    ellipse at 50% 55%,
+    var(--card) 0%,
+    var(--hero-bg) 55%,
+    var(--background) 100%
+  );
+  border: 1px solid var(--border);
+  cursor: grab;
+  touch-action: pan-y;
+  user-select: none;
+  outline: none;
+}
+.spiral-stage:active {
+  cursor: grabbing;
+}
+.spiral-stage:focus-visible {
+  box-shadow: 0 0 0 3px var(--ring);
+}
+.spiral-scene {
+  position: absolute;
+  inset: 0;
+  perspective: 1400px;
+  perspective-origin: 50% 45%;
+}
+.spiral-world {
+  position: absolute;
+  left: 50%;
+  top: 52%;
+  transform-style: preserve-3d;
+  transform: translateZ(-120px) rotateX(-14deg) rotateZ(-4deg);
+}
+.spiral-trail-dot {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  margin: -4px;
+  border-radius: 50%;
+  background: var(--warm);
+}
+.spiral-node {
+  position: absolute;
+  left: 0;
+  top: 0;
+  will-change: transform, opacity, filter;
+  transform-origin: 0 0;
+}
+.spiral-card-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+}
+.spiral-card {
+  width: 300px;
+  padding: 10px;
+  border-radius: calc(var(--radius) * 1.3);
+  background: var(--card);
+  color: var(--card-foreground);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  text-align: left;
+  cursor: pointer;
+  transition: box-shadow 0.3s;
+}
+.spiral-node.is-focused .spiral-card {
+  box-shadow:
+    0 30px 70px rgb(0 0 0 / 22%),
+    0 0 0 2px var(--warm);
+}
+.spiral-photo {
+  display: block;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: var(--muted);
+}
+.spiral-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+.spiral-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0.65rem 0.35rem 0.2rem;
+}
+.spiral-meta strong {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 1.15rem;
+  font-weight: 500;
+}
+.spiral-date {
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--warm);
+  font-weight: 600;
+}
+.spiral-meta small {
+  color: var(--muted-foreground);
+}
+.spiral-node:not(.is-focused) .spiral-meta small {
+  display: none;
+}
+.spiral-open {
+  position: static;
+}
+.spiral-marker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.9rem 1.4rem;
+  border-radius: 999px;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  cursor: pointer;
+  border: 0;
+}
+.spiral-marker span {
+  white-space: nowrap;
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+.spiral-marker strong {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 1.6rem;
+  font-weight: 500;
+}
+.spiral-node.is-marker:not(.is-focused) .spiral-marker {
+  background: var(--secondary);
+  color: var(--secondary-foreground);
+}
+.spiral-orient {
+  position: absolute;
+  left: 1.25rem;
+  z-index: 2000;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+.spiral-orient-future {
+  top: 1rem;
+}
+.spiral-orient-past {
+  bottom: 1rem;
+}
+.spiral-empty {
+  position: absolute;
+  left: 50%;
+  bottom: 1.5rem;
+  transform: translateX(-50%);
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  text-align: center;
+  padding: 0.9rem 1.3rem;
+  border-radius: var(--radius);
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--muted-foreground);
+  max-width: 90%;
+}
+.spiral-empty strong {
+  color: var(--foreground);
+}
+@media (max-width: 720px) {
+  .spiral-stage {
+    height: 520px;
+  }
+  .spiral-card {
+    width: 220px;
+    padding: 8px;
+  }
+  .spiral-meta strong {
+    font-size: 1rem;
+  }
+  .spiral-scene {
+    perspective: 900px;
+  }
+}
