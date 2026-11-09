@@ -127,6 +127,65 @@ input {
 button {
   cursor: pointer;
 }
+.auth-card {
+  width: min(100%, 440px);
+  margin: clamp(2rem, 8vw, 6rem) auto;
+  padding: clamp(1.5rem, 5vw, 2.5rem);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.auth-card h1 {
+  font-family: Fraunces, serif;
+  font-size: clamp(1.8rem, 5vw, 2.4rem);
+  line-height: 1.15;
+}
+.auth-card form {
+  display: grid;
+  gap: 0.55rem;
+  margin: 1.5rem 0;
+}
+.auth-card label {
+  margin-top: 0.5rem;
+  font-weight: 600;
+}
+.auth-card input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--input);
+  border-radius: 0.65rem;
+  background: var(--background);
+  color: var(--foreground);
+}
+.auth-card input:focus {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+.auth-card form button {
+  margin-top: 0.8rem;
+  padding: 0.8rem 1rem;
+  border: 0;
+  border-radius: 0.65rem;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  font-weight: 600;
+}
+.auth-card button:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+.auth-card [role='alert'],
+.auth-error {
+  color: var(--destructive);
+  font-size: 0.9rem;
+}
+.logout-button {
+  border: 0;
+  background: transparent;
+  color: var(--foreground);
+  font-weight: 600;
+}
 a {
   color: inherit;
   text-decoration: none;
@@ -2080,5 +2139,109 @@ h3 {
   }
   .spiral-scene {
     perspective: 900px;
+  }
+}
+
+.family-panel {
+  max-width: 720px;
+  margin: 3rem auto;
+  padding: clamp(1.5rem, 4vw, 3rem);
+  border: 1px solid var(--border);
+  border-radius: 1.5rem;
+  background: var(--card);
+}
+.family-panel h1 {
+  font-size: clamp(2rem, 5vw, 3rem);
+  margin: 0.3rem 0 1rem;
+}
+.family-panel h2 {
+  font-size: 1.3rem;
+  margin-top: 2rem;
+}
+.family-panel form {
+  display: grid;
+  gap: 0.7rem;
+  margin: 1.5rem 0;
+}
+.family-panel input,
+.family-panel select {
+  width: 100%;
+  padding: 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+  background: var(--background);
+  color: var(--foreground);
+}
+.family-panel button {
+  border-radius: 0.6rem;
+  padding: 0.7rem 1rem;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  cursor: pointer;
+}
+.family-panel button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+.family-list {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0;
+  display: grid;
+  gap: 0.7rem;
+}
+.family-list li {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.8rem;
+}
+.family-list li div {
+  display: grid;
+  gap: 0.2rem;
+}
+.family-list small {
+  opacity: 0.7;
+}
+
+.form-hint {
+  color: var(--muted-foreground);
+  font-size: 12px;
+  margin-top: -0.35rem;
+}
+.space-manage-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.space-manage-link:hover {
+  color: var(--foreground);
+}
+@media (max-width: 1020px) {
+  .space-manage-link {
+    width: 38px;
+    height: 38px;
+    justify-content: center;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--card);
+  }
+  .space-manage-link span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
   }
 }

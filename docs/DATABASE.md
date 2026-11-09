@@ -32,7 +32,7 @@ Todas as 13 tabelas privadas têm RLS. `anon` não recebe grants. `authenticated
 - `contributor`: cria eventos, pessoas, catálogos, mídia, comentários e memórias no próprio espaço; edita apenas conteúdo de sua autoria. Pode contribuir com mídia ou memória em evento de outro autor, mas não editar o evento nem a mídia alheia.
 - `admin`: além de contribuir, gerencia membros e convites e modera conteúdo do próprio espaço. Moderações e alterações de papel são auditadas. Não modifica o próprio papel, não deixa um espaço sem administrador e não acessa outro espaço.
 
-Convites só podem ser criados e revogados por administradores. A aceitação do convite, envio de e-mail, geração criptográfica do token e associação do usuário serão implementados em 2B; `accepted` não pode ser marcado diretamente por um cliente. O cadastro público está desativado no `supabase/config.toml` local.
+Convites só podem ser criados e revogados por administradores. O aceite da Etapa 2B.2 usa token aleatório com hash no banco, e-mail confirmado e função transacional; `accepted` não pode ser marcado diretamente por um cliente. O cadastro público está desativado no `supabase/config.toml` local.
 
 O `INSERT` de um espaço cria seu administrador em um gatilho `AFTER INSERT`. Por isso, um cliente deve inserir sem `RETURNING` imediato e fazer uma leitura separada após o comando; a associação já existirá nessa segunda consulta. O fluxo de criação de espaços será orquestrado em 2B.
 
@@ -60,3 +60,7 @@ npx supabase stop
 Se a rede já existir, não a recrie. Após iniciar, confira `docker ps`: as portas `54321`–`54324` e `54327` deste projeto devem aparecer em `127.0.0.1`, não em `0.0.0.0`. Não altere redes ou contêineres de outros projetos.
 
 Os 68 testes pgTAP cobrem tabelas, RLS, limites de papéis, acesso cruzado, autoria, datas, FKs, subeventos, exclusão lógica, convites, auditoria e criação do primeiro administrador. `db lint` não encontrou erros de esquema. Antes de uso hospedado, repetir os testes no ambiente alvo e adicionar testes do fluxo real de Auth/Storage.
+
+## Etapa 2B.2 — aceite de convites
+
+A migração `20261109120000_accept_invitations.sql` adiciona `public.accept_invitation(text)`, executável apenas por `authenticated`. A função compara o hash SHA-256 do token, exige e-mail confirmado em `auth.users`, trava o convite para serializar aceites, valida estado e expiração, cria a associação com o papel do convite e marca o aceite na mesma transação. Repetir o aceite pela mesma conta é idempotente; outra conta não pode reutilizá-lo. O hash continua sem permissão de leitura. O gatilho de auditoria existente registra a associação e a alteração do convite. Os testes fictícios em `supabase/tests/invitation_acceptance_test.sql` são revertidos após a execução.
