@@ -23,6 +23,8 @@ import { Route as MembrosRouteImport } from './routes/membros'
 import { Route as NovaSenhaRouteImport } from './routes/nova-senha'
 import { Route as ParticipantesRouteImport } from './routes/participantes'
 import { Route as RecuperarSenhaRouteImport } from './routes/recuperar-senha'
+import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
+import { Route as AuthGoogleRouteImport } from './routes/auth.google'
 import { Route as EventosEventIdRouteImport } from './routes/eventos.$eventId'
 
 const IndexRoute = IndexRouteImport.update({
@@ -95,6 +97,16 @@ const RecuperarSenhaRoute = RecuperarSenhaRouteImport.update({
   path: '/recuperar-senha',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/auth/callback',
+  path: '/auth/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthGoogleRoute = AuthGoogleRouteImport.update({
+  id: '/auth/google',
+  path: '/auth/google',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EventosEventIdRoute = EventosEventIdRouteImport.update({
   id: '/$eventId',
   path: '/$eventId',
@@ -116,6 +128,8 @@ export interface FileRoutesByFullPath {
   '/nova-senha': typeof NovaSenhaRoute
   '/participantes': typeof ParticipantesRoute
   '/recuperar-senha': typeof RecuperarSenhaRoute
+  '/auth/callback': typeof AuthCallbackRoute
+  '/auth/google': typeof AuthGoogleRoute
   '/eventos/$eventId': typeof EventosEventIdRoute
 }
 export interface FileRoutesByTo {
@@ -133,6 +147,8 @@ export interface FileRoutesByTo {
   '/nova-senha': typeof NovaSenhaRoute
   '/participantes': typeof ParticipantesRoute
   '/recuperar-senha': typeof RecuperarSenhaRoute
+  '/auth/callback': typeof AuthCallbackRoute
+  '/auth/google': typeof AuthGoogleRoute
   '/eventos/$eventId': typeof EventosEventIdRoute
 }
 export interface FileRoutesById {
@@ -151,6 +167,8 @@ export interface FileRoutesById {
   '/nova-senha': typeof NovaSenhaRoute
   '/participantes': typeof ParticipantesRoute
   '/recuperar-senha': typeof RecuperarSenhaRoute
+  '/auth/callback': typeof AuthCallbackRoute
+  '/auth/google': typeof AuthGoogleRoute
   '/eventos/$eventId': typeof EventosEventIdRoute
 }
 export interface FileRouteTypes {
@@ -170,6 +188,8 @@ export interface FileRouteTypes {
     | '/nova-senha'
     | '/participantes'
     | '/recuperar-senha'
+    | '/auth/callback'
+    | '/auth/google'
     | '/eventos/$eventId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -187,6 +207,8 @@ export interface FileRouteTypes {
     | '/nova-senha'
     | '/participantes'
     | '/recuperar-senha'
+    | '/auth/callback'
+    | '/auth/google'
     | '/eventos/$eventId'
   id:
     | '__root__'
@@ -204,6 +226,8 @@ export interface FileRouteTypes {
     | '/nova-senha'
     | '/participantes'
     | '/recuperar-senha'
+    | '/auth/callback'
+    | '/auth/google'
     | '/eventos/$eventId'
   fileRoutesById: FileRoutesById
 }
@@ -222,6 +246,8 @@ export interface RootRouteChildren {
   NovaSenhaRoute: typeof NovaSenhaRoute
   ParticipantesRoute: typeof ParticipantesRoute
   RecuperarSenhaRoute: typeof RecuperarSenhaRoute
+  AuthCallbackRoute: typeof AuthCallbackRoute
+  AuthGoogleRoute: typeof AuthGoogleRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -324,6 +350,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RecuperarSenhaRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/auth/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/google': {
+      id: '/auth/google'
+      path: '/auth/google'
+      fullPath: '/auth/google'
+      preLoaderRoute: typeof AuthGoogleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/eventos/$eventId': {
       id: '/eventos/$eventId'
       path: '/$eventId'
@@ -360,6 +400,8 @@ const rootRouteChildren: RootRouteChildren = {
   NovaSenhaRoute: NovaSenhaRoute,
   ParticipantesRoute: ParticipantesRoute,
   RecuperarSenhaRoute: RecuperarSenhaRoute,
+  AuthCallbackRoute: AuthCallbackRoute,
+  AuthGoogleRoute: AuthGoogleRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
