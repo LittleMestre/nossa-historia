@@ -663,7 +663,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      accept_invitation: {
+        Args: { invite_token: string }
+        Returns: string
+      }
     }
     Enums: {
       date_precision: 'day' | 'month' | 'year' | 'range' | 'unknown'

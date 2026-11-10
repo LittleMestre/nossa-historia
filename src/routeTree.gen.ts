@@ -10,17 +10,36 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ConviteRouteImport } from './routes/convite'
+import { Route as ConvitesRouteImport } from './routes/convites'
 import { Route as DemoEspiralRouteImport } from './routes/demo-espiral'
 import { Route as DemoLinhaDoTempoRouteImport } from './routes/demo-linha-do-tempo'
+import { Route as EntrarRouteImport } from './routes/entrar'
+import { Route as EspacosRouteImport } from './routes/espacos'
 import { Route as EventosRouteImport } from './routes/eventos'
 import { Route as GaleriaRouteImport } from './routes/galeria'
 import { Route as LinhaDoTempoRouteImport } from './routes/linha-do-tempo'
+import { Route as MembrosRouteImport } from './routes/membros'
+import { Route as NovaSenhaRouteImport } from './routes/nova-senha'
 import { Route as ParticipantesRouteImport } from './routes/participantes'
+import { Route as RecuperarSenhaRouteImport } from './routes/recuperar-senha'
+import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
+import { Route as AuthGoogleRouteImport } from './routes/auth.google'
 import { Route as EventosEventIdRouteImport } from './routes/eventos.$eventId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConviteRoute = ConviteRouteImport.update({
+  id: '/convite',
+  path: '/convite',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConvitesRoute = ConvitesRouteImport.update({
+  id: '/convites',
+  path: '/convites',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DemoEspiralRoute = DemoEspiralRouteImport.update({
@@ -31,6 +50,16 @@ const DemoEspiralRoute = DemoEspiralRouteImport.update({
 const DemoLinhaDoTempoRoute = DemoLinhaDoTempoRouteImport.update({
   id: '/demo-linha-do-tempo',
   path: '/demo-linha-do-tempo',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EntrarRoute = EntrarRouteImport.update({
+  id: '/entrar',
+  path: '/entrar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EspacosRoute = EspacosRouteImport.update({
+  id: '/espacos',
+  path: '/espacos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EventosRoute = EventosRouteImport.update({
@@ -48,9 +77,34 @@ const LinhaDoTempoRoute = LinhaDoTempoRouteImport.update({
   path: '/linha-do-tempo',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MembrosRoute = MembrosRouteImport.update({
+  id: '/membros',
+  path: '/membros',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NovaSenhaRoute = NovaSenhaRouteImport.update({
+  id: '/nova-senha',
+  path: '/nova-senha',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ParticipantesRoute = ParticipantesRouteImport.update({
   id: '/participantes',
   path: '/participantes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RecuperarSenhaRoute = RecuperarSenhaRouteImport.update({
+  id: '/recuperar-senha',
+  path: '/recuperar-senha',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/auth/callback',
+  path: '/auth/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthGoogleRoute = AuthGoogleRouteImport.update({
+  id: '/auth/google',
+  path: '/auth/google',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EventosEventIdRoute = EventosEventIdRouteImport.update({
@@ -61,76 +115,139 @@ const EventosEventIdRoute = EventosEventIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/convite': typeof ConviteRoute
+  '/convites': typeof ConvitesRoute
   '/demo-espiral': typeof DemoEspiralRoute
   '/demo-linha-do-tempo': typeof DemoLinhaDoTempoRoute
+  '/entrar': typeof EntrarRoute
+  '/espacos': typeof EspacosRoute
   '/eventos': typeof EventosRouteWithChildren
   '/galeria': typeof GaleriaRoute
   '/linha-do-tempo': typeof LinhaDoTempoRoute
+  '/membros': typeof MembrosRoute
+  '/nova-senha': typeof NovaSenhaRoute
   '/participantes': typeof ParticipantesRoute
+  '/recuperar-senha': typeof RecuperarSenhaRoute
+  '/auth/callback': typeof AuthCallbackRoute
+  '/auth/google': typeof AuthGoogleRoute
   '/eventos/$eventId': typeof EventosEventIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/convite': typeof ConviteRoute
+  '/convites': typeof ConvitesRoute
   '/demo-espiral': typeof DemoEspiralRoute
   '/demo-linha-do-tempo': typeof DemoLinhaDoTempoRoute
+  '/entrar': typeof EntrarRoute
+  '/espacos': typeof EspacosRoute
   '/eventos': typeof EventosRouteWithChildren
   '/galeria': typeof GaleriaRoute
   '/linha-do-tempo': typeof LinhaDoTempoRoute
+  '/membros': typeof MembrosRoute
+  '/nova-senha': typeof NovaSenhaRoute
   '/participantes': typeof ParticipantesRoute
+  '/recuperar-senha': typeof RecuperarSenhaRoute
+  '/auth/callback': typeof AuthCallbackRoute
+  '/auth/google': typeof AuthGoogleRoute
   '/eventos/$eventId': typeof EventosEventIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/convite': typeof ConviteRoute
+  '/convites': typeof ConvitesRoute
   '/demo-espiral': typeof DemoEspiralRoute
   '/demo-linha-do-tempo': typeof DemoLinhaDoTempoRoute
+  '/entrar': typeof EntrarRoute
+  '/espacos': typeof EspacosRoute
   '/eventos': typeof EventosRouteWithChildren
   '/galeria': typeof GaleriaRoute
   '/linha-do-tempo': typeof LinhaDoTempoRoute
+  '/membros': typeof MembrosRoute
+  '/nova-senha': typeof NovaSenhaRoute
   '/participantes': typeof ParticipantesRoute
+  '/recuperar-senha': typeof RecuperarSenhaRoute
+  '/auth/callback': typeof AuthCallbackRoute
+  '/auth/google': typeof AuthGoogleRoute
   '/eventos/$eventId': typeof EventosEventIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/convite'
+    | '/convites'
     | '/demo-espiral'
     | '/demo-linha-do-tempo'
+    | '/entrar'
+    | '/espacos'
     | '/eventos'
     | '/galeria'
     | '/linha-do-tempo'
+    | '/membros'
+    | '/nova-senha'
     | '/participantes'
+    | '/recuperar-senha'
+    | '/auth/callback'
+    | '/auth/google'
     | '/eventos/$eventId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/convite'
+    | '/convites'
     | '/demo-espiral'
     | '/demo-linha-do-tempo'
+    | '/entrar'
+    | '/espacos'
     | '/eventos'
     | '/galeria'
     | '/linha-do-tempo'
+    | '/membros'
+    | '/nova-senha'
     | '/participantes'
+    | '/recuperar-senha'
+    | '/auth/callback'
+    | '/auth/google'
     | '/eventos/$eventId'
   id:
     | '__root__'
     | '/'
+    | '/convite'
+    | '/convites'
     | '/demo-espiral'
     | '/demo-linha-do-tempo'
+    | '/entrar'
+    | '/espacos'
     | '/eventos'
     | '/galeria'
     | '/linha-do-tempo'
+    | '/membros'
+    | '/nova-senha'
     | '/participantes'
+    | '/recuperar-senha'
+    | '/auth/callback'
+    | '/auth/google'
     | '/eventos/$eventId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ConviteRoute: typeof ConviteRoute
+  ConvitesRoute: typeof ConvitesRoute
   DemoEspiralRoute: typeof DemoEspiralRoute
   DemoLinhaDoTempoRoute: typeof DemoLinhaDoTempoRoute
+  EntrarRoute: typeof EntrarRoute
+  EspacosRoute: typeof EspacosRoute
   EventosRoute: typeof EventosRouteWithChildren
   GaleriaRoute: typeof GaleriaRoute
   LinhaDoTempoRoute: typeof LinhaDoTempoRoute
+  MembrosRoute: typeof MembrosRoute
+  NovaSenhaRoute: typeof NovaSenhaRoute
   ParticipantesRoute: typeof ParticipantesRoute
+  RecuperarSenhaRoute: typeof RecuperarSenhaRoute
+  AuthCallbackRoute: typeof AuthCallbackRoute
+  AuthGoogleRoute: typeof AuthGoogleRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -140,6 +257,20 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/convite': {
+      id: '/convite'
+      path: '/convite'
+      fullPath: '/convite'
+      preLoaderRoute: typeof ConviteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/convites': {
+      id: '/convites'
+      path: '/convites'
+      fullPath: '/convites'
+      preLoaderRoute: typeof ConvitesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/demo-espiral': {
@@ -154,6 +285,20 @@ declare module '@tanstack/react-router' {
       path: '/demo-linha-do-tempo'
       fullPath: '/demo-linha-do-tempo'
       preLoaderRoute: typeof DemoLinhaDoTempoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/entrar': {
+      id: '/entrar'
+      path: '/entrar'
+      fullPath: '/entrar'
+      preLoaderRoute: typeof EntrarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/espacos': {
+      id: '/espacos'
+      path: '/espacos'
+      fullPath: '/espacos'
+      preLoaderRoute: typeof EspacosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/eventos': {
@@ -177,11 +322,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LinhaDoTempoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/membros': {
+      id: '/membros'
+      path: '/membros'
+      fullPath: '/membros'
+      preLoaderRoute: typeof MembrosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/nova-senha': {
+      id: '/nova-senha'
+      path: '/nova-senha'
+      fullPath: '/nova-senha'
+      preLoaderRoute: typeof NovaSenhaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/participantes': {
       id: '/participantes'
       path: '/participantes'
       fullPath: '/participantes'
       preLoaderRoute: typeof ParticipantesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/recuperar-senha': {
+      id: '/recuperar-senha'
+      path: '/recuperar-senha'
+      fullPath: '/recuperar-senha'
+      preLoaderRoute: typeof RecuperarSenhaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/auth/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/google': {
+      id: '/auth/google'
+      path: '/auth/google'
+      fullPath: '/auth/google'
+      preLoaderRoute: typeof AuthGoogleRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/eventos/$eventId': {
@@ -207,12 +387,21 @@ const EventosRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ConviteRoute: ConviteRoute,
+  ConvitesRoute: ConvitesRoute,
   DemoEspiralRoute: DemoEspiralRoute,
   DemoLinhaDoTempoRoute: DemoLinhaDoTempoRoute,
+  EntrarRoute: EntrarRoute,
+  EspacosRoute: EspacosRoute,
   EventosRoute: EventosRouteWithChildren,
   GaleriaRoute: GaleriaRoute,
   LinhaDoTempoRoute: LinhaDoTempoRoute,
+  MembrosRoute: MembrosRoute,
+  NovaSenhaRoute: NovaSenhaRoute,
   ParticipantesRoute: ParticipantesRoute,
+  RecuperarSenhaRoute: RecuperarSenhaRoute,
+  AuthCallbackRoute: AuthCallbackRoute,
+  AuthGoogleRoute: AuthGoogleRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
