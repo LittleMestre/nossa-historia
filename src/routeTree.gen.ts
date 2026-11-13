@@ -25,7 +25,7 @@ import { Route as ParticipantesRouteImport } from './routes/participantes'
 import { Route as RecuperarSenhaRouteImport } from './routes/recuperar-senha'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AuthGoogleRouteImport } from './routes/auth.google'
-import { Route as EventosEventIdRouteImport } from './routes/eventos.$eventId'
+import { Route as EventosEventIdRouteImport } from './routes/eventos_.$eventId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -108,9 +108,9 @@ const AuthGoogleRoute = AuthGoogleRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const EventosEventIdRoute = EventosEventIdRouteImport.update({
-  id: '/$eventId',
-  path: '/$eventId',
-  getParentRoute: () => EventosRoute,
+  id: '/eventos_/$eventId',
+  path: '/eventos/$eventId',
+  getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -121,7 +121,7 @@ export interface FileRoutesByFullPath {
   '/demo-linha-do-tempo': typeof DemoLinhaDoTempoRoute
   '/entrar': typeof EntrarRoute
   '/espacos': typeof EspacosRoute
-  '/eventos': typeof EventosRouteWithChildren
+  '/eventos': typeof EventosRoute
   '/galeria': typeof GaleriaRoute
   '/linha-do-tempo': typeof LinhaDoTempoRoute
   '/membros': typeof MembrosRoute
@@ -140,7 +140,7 @@ export interface FileRoutesByTo {
   '/demo-linha-do-tempo': typeof DemoLinhaDoTempoRoute
   '/entrar': typeof EntrarRoute
   '/espacos': typeof EspacosRoute
-  '/eventos': typeof EventosRouteWithChildren
+  '/eventos': typeof EventosRoute
   '/galeria': typeof GaleriaRoute
   '/linha-do-tempo': typeof LinhaDoTempoRoute
   '/membros': typeof MembrosRoute
@@ -160,7 +160,7 @@ export interface FileRoutesById {
   '/demo-linha-do-tempo': typeof DemoLinhaDoTempoRoute
   '/entrar': typeof EntrarRoute
   '/espacos': typeof EspacosRoute
-  '/eventos': typeof EventosRouteWithChildren
+  '/eventos': typeof EventosRoute
   '/galeria': typeof GaleriaRoute
   '/linha-do-tempo': typeof LinhaDoTempoRoute
   '/membros': typeof MembrosRoute
@@ -169,7 +169,7 @@ export interface FileRoutesById {
   '/recuperar-senha': typeof RecuperarSenhaRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/google': typeof AuthGoogleRoute
-  '/eventos/$eventId': typeof EventosEventIdRoute
+  '/eventos_/$eventId': typeof EventosEventIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -228,7 +228,7 @@ export interface FileRouteTypes {
     | '/recuperar-senha'
     | '/auth/callback'
     | '/auth/google'
-    | '/eventos/$eventId'
+    | '/eventos_/$eventId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -239,7 +239,7 @@ export interface RootRouteChildren {
   DemoLinhaDoTempoRoute: typeof DemoLinhaDoTempoRoute
   EntrarRoute: typeof EntrarRoute
   EspacosRoute: typeof EspacosRoute
-  EventosRoute: typeof EventosRouteWithChildren
+  EventosRoute: typeof EventosRoute
   GaleriaRoute: typeof GaleriaRoute
   LinhaDoTempoRoute: typeof LinhaDoTempoRoute
   MembrosRoute: typeof MembrosRoute
@@ -248,6 +248,7 @@ export interface RootRouteChildren {
   RecuperarSenhaRoute: typeof RecuperarSenhaRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   AuthGoogleRoute: typeof AuthGoogleRoute
+  EventosEventIdRoute: typeof EventosEventIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -364,26 +365,15 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthGoogleRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/eventos/$eventId': {
-      id: '/eventos/$eventId'
-      path: '/$eventId'
+    '/eventos_/$eventId': {
+      id: '/eventos_/$eventId'
+      path: '/eventos/$eventId'
       fullPath: '/eventos/$eventId'
       preLoaderRoute: typeof EventosEventIdRouteImport
-      parentRoute: typeof EventosRoute
+      parentRoute: typeof rootRouteImport
     }
   }
 }
-
-interface EventosRouteChildren {
-  EventosEventIdRoute: typeof EventosEventIdRoute
-}
-
-const EventosRouteChildren: EventosRouteChildren = {
-  EventosEventIdRoute: EventosEventIdRoute,
-}
-
-const EventosRouteWithChildren =
-  EventosRoute._addFileChildren(EventosRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -393,7 +383,7 @@ const rootRouteChildren: RootRouteChildren = {
   DemoLinhaDoTempoRoute: DemoLinhaDoTempoRoute,
   EntrarRoute: EntrarRoute,
   EspacosRoute: EspacosRoute,
-  EventosRoute: EventosRouteWithChildren,
+  EventosRoute: EventosRoute,
   GaleriaRoute: GaleriaRoute,
   LinhaDoTempoRoute: LinhaDoTempoRoute,
   MembrosRoute: MembrosRoute,
@@ -402,6 +392,7 @@ const rootRouteChildren: RootRouteChildren = {
   RecuperarSenhaRoute: RecuperarSenhaRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   AuthGoogleRoute: AuthGoogleRoute,
+  EventosEventIdRoute: EventosEventIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
