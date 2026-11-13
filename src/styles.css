@@ -2283,3 +2283,24 @@ h3 {
     border: 0;
   }
 }
+
+.event-panel { margin: 1.5rem 0; padding: clamp(1.25rem, 3vw, 2rem); background: var(--card); border: 1px solid var(--border); border-radius: 1.25rem; max-width: 900px; }
+.event-form { display: grid; gap: 1.25rem; margin-top: 1.5rem; }
+.event-input { width: 100%; padding: .75rem; border: 1px solid var(--border); border-radius: .65rem; background: var(--background); color: var(--foreground); }
+.event-input:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.event-date-fields { border: 1px solid var(--border); border-radius: .7rem; padding: 1rem; }
+.event-date-fields legend { padding: 0 .3rem; font-weight: 600; }
+.event-list { list-style: none; padding: 0; display: grid; gap: 1rem; max-width: 900px; }
+.event-card { display: block; border: 1px solid var(--border); border-radius: 1.15rem; padding: 1.35rem; background: var(--card); color: inherit; text-decoration: none; }
+.event-card:hover, .event-card:focus-visible { border-color: var(--primary); }
+.event-card-top { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; color: var(--muted-foreground); font-size: .8rem; }
+.event-card h2 { font-size: 1.3rem; font-weight: 600; margin: .5rem 0; }
+.event-card p { color: var(--muted-foreground); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.event-detail-link, .event-back { display: inline-block; margin-top: 1rem; color: var(--primary); font-weight: 600; }
+.event-tag { border: 1px solid var(--border); border-radius: 99px; padding: .25rem .65rem; font-size: .8rem; }
+.event-description { white-space: pre-wrap; margin: 1.5rem 0; }
+.event-notice { max-width: 900px; margin: 1rem 0; padding: .8rem 1rem; border: 1px solid var(--border); border-radius: .7rem; background: var(--card); color: var(--foreground); }
+.person-link-list { list-style: none; padding: 0; margin: 1rem 0; display: grid; gap: .6rem; }
+.person-link-list li { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .75rem; border: 1px solid var(--border); border-radius: .7rem; padding: .75rem 1rem; }
+.person-link-list a { color: var(--foreground); font-weight: 600; text-decoration: none; }
+.person-link-list a:hover { color: var(--primary); }
