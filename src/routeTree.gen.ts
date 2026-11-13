@@ -26,6 +26,7 @@ import { Route as RecuperarSenhaRouteImport } from './routes/recuperar-senha'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AuthGoogleRouteImport } from './routes/auth.google'
 import { Route as EventosEventIdRouteImport } from './routes/eventos_.$eventId'
+import { Route as ParticipantesPersonIdRouteImport } from './routes/participantes_.$personId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -112,6 +113,11 @@ const EventosEventIdRoute = EventosEventIdRouteImport.update({
   path: '/eventos/$eventId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ParticipantesPersonIdRoute = ParticipantesPersonIdRouteImport.update({
+  id: '/participantes_/$personId',
+  path: '/participantes/$personId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -131,6 +137,7 @@ export interface FileRoutesByFullPath {
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/google': typeof AuthGoogleRoute
   '/eventos/$eventId': typeof EventosEventIdRoute
+  '/participantes/$personId': typeof ParticipantesPersonIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -150,6 +157,7 @@ export interface FileRoutesByTo {
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/google': typeof AuthGoogleRoute
   '/eventos/$eventId': typeof EventosEventIdRoute
+  '/participantes/$personId': typeof ParticipantesPersonIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -170,6 +178,7 @@ export interface FileRoutesById {
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/google': typeof AuthGoogleRoute
   '/eventos_/$eventId': typeof EventosEventIdRoute
+  '/participantes_/$personId': typeof ParticipantesPersonIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -191,6 +200,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/auth/google'
     | '/eventos/$eventId'
+    | '/participantes/$personId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -210,6 +220,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/auth/google'
     | '/eventos/$eventId'
+    | '/participantes/$personId'
   id:
     | '__root__'
     | '/'
@@ -229,6 +240,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/auth/google'
     | '/eventos_/$eventId'
+    | '/participantes_/$personId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -249,6 +261,7 @@ export interface RootRouteChildren {
   AuthCallbackRoute: typeof AuthCallbackRoute
   AuthGoogleRoute: typeof AuthGoogleRoute
   EventosEventIdRoute: typeof EventosEventIdRoute
+  ParticipantesPersonIdRoute: typeof ParticipantesPersonIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -372,6 +385,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EventosEventIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/participantes_/$personId': {
+      id: '/participantes_/$personId'
+      path: '/participantes/$personId'
+      fullPath: '/participantes/$personId'
+      preLoaderRoute: typeof ParticipantesPersonIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -393,6 +413,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthCallbackRoute: AuthCallbackRoute,
   AuthGoogleRoute: AuthGoogleRoute,
   EventosEventIdRoute: EventosEventIdRoute,
+  ParticipantesPersonIdRoute: ParticipantesPersonIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

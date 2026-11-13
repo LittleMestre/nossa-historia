@@ -2300,3 +2300,7 @@ h3 {
 .event-tag { border: 1px solid var(--border); border-radius: 99px; padding: .25rem .65rem; font-size: .8rem; }
 .event-description { white-space: pre-wrap; margin: 1.5rem 0; }
 .event-notice { max-width: 900px; margin: 1rem 0; padding: .8rem 1rem; border: 1px solid var(--border); border-radius: .7rem; background: var(--card); color: var(--foreground); }
+.person-link-list { list-style: none; padding: 0; margin: 1rem 0; display: grid; gap: .6rem; }
+.person-link-list li { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .75rem; border: 1px solid var(--border); border-radius: .7rem; padding: .75rem 1rem; }
+.person-link-list a { color: var(--foreground); font-weight: 600; text-decoration: none; }
+.person-link-list a:hover { color: var(--primary); }

@@ -3,15 +3,27 @@ import { useState } from 'react'
 import { BookOpenText } from 'lucide-react'
 import { EmptyState } from '../components/EmptyState'
 import { EventForm } from '../components/events/EventForm'
+import { EventParticipants } from '../components/people/EventParticipants'
 import { PageHeading } from '../components/layout/PageHeading'
 import { Button } from '../components/ui/button'
 import { deleteEvent, getEventDetail, updateEvent } from '../features/events/events'
 import { formatEventDate, momentLabel } from '../features/events/model'
 import type { EventInput } from '../features/events/model'
+import { getEventParticipants } from '../features/people/people'
 
-export const Route = createFileRoute('/eventos_/$eventId')({ loader: ({ params }) => getEventDetail({ data: { eventId: params.eventId } }), component: EventDetailPage })
+export const Route = createFileRoute('/eventos_/$eventId')({
+  loader: async ({ params }) => {
+    const [detail, participants] = await Promise.all([
+      getEventDetail({ data: { eventId: params.eventId } }),
+      getEventParticipants({ data: { eventId: params.eventId } }),
+    ])
+    return { detail, participants }
+  },
+  component: EventDetailPage,
+})
 function EventDetailPage() {
-  const { event, categories, locations, authorName, canEdit } = Route.useLoaderData()
+  const { detail, participants } = Route.useLoaderData()
+  const { event, categories, locations, authorName, canEdit } = detail
   const navigate = useNavigate()
   const router = useRouter()
   const [editing, setEditing] = useState(false)
@@ -55,5 +67,6 @@ function EventDetailPage() {
       {canEdit && <div className="flex flex-wrap gap-3 pt-4"><Button onClick={() => setEditing(true)}>Editar evento</Button><Button variant="destructive" onClick={() => void remove()} disabled={busy}>{busy ? 'Excluindo…' : 'Excluir evento'}</Button></div>}
       {error && <p role="alert" className="auth-error">{error}</p>}
     </article>}
+    <EventParticipants eventId={event.id} data={participants} />
   </div>
 }
