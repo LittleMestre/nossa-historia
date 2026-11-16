@@ -416,6 +416,7 @@ export type Database = {
           storage_path: string
           taken_at: string | null
           updated_at: string
+          upload_status: string
           uploaded_by: string
           width: number | null
         }
@@ -436,6 +437,7 @@ export type Database = {
           storage_path: string
           taken_at?: string | null
           updated_at?: string
+          upload_status?: string
           uploaded_by: string
           width?: number | null
         }
@@ -455,6 +457,7 @@ export type Database = {
           storage_path?: string
           taken_at?: string | null
           updated_at?: string
+          upload_status?: string
           uploaded_by?: string
           width?: number | null
         }
@@ -663,10 +666,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      accept_invitation: {
-        Args: { invite_token: string }
-        Returns: string
-      }
+      accept_invitation: { Args: { invite_token: string }; Returns: string }
+      finalize_media_upload: { Args: { target_id: string }; Returns: boolean }
     }
     Enums: {
       date_precision: 'day' | 'month' | 'year' | 'range' | 'unknown'

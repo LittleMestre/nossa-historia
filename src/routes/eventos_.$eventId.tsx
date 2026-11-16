@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { BookOpenText } from 'lucide-react'
 import { EmptyState } from '../components/EmptyState'
 import { EventForm } from '../components/events/EventForm'
+import { EventPhotos } from '../components/events/EventPhotos'
 import { EventParticipants } from '../components/people/EventParticipants'
 import { PageHeading } from '../components/layout/PageHeading'
 import { Button } from '../components/ui/button'
@@ -10,19 +11,21 @@ import { deleteEvent, getEventDetail, updateEvent } from '../features/events/eve
 import { formatEventDate, momentLabel } from '../features/events/model'
 import type { EventInput } from '../features/events/model'
 import { getEventParticipants } from '../features/people/people'
+import { getEventPhotos } from '../features/media/media'
 
 export const Route = createFileRoute('/eventos_/$eventId')({
   loader: async ({ params }) => {
-    const [detail, participants] = await Promise.all([
+    const [detail, participants, photos] = await Promise.all([
       getEventDetail({ data: { eventId: params.eventId } }),
       getEventParticipants({ data: { eventId: params.eventId } }),
+      getEventPhotos({ data: { eventId: params.eventId } }),
     ])
-    return { detail, participants }
+    return { detail, participants, photos }
   },
   component: EventDetailPage,
 })
 function EventDetailPage() {
-  const { detail, participants } = Route.useLoaderData()
+  const { detail, participants, photos } = Route.useLoaderData()
   const { event, categories, locations, authorName, canEdit } = detail
   const navigate = useNavigate()
   const router = useRouter()
@@ -68,5 +71,6 @@ function EventDetailPage() {
       {error && <p role="alert" className="auth-error">{error}</p>}
     </article>}
     <EventParticipants eventId={event.id} data={participants} />
+    <EventPhotos eventId={event.id} data={photos} />
   </div>
 }

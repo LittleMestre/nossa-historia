@@ -1,6 +1,6 @@
 # Banco de dados e segurança — Etapa 2A
 
-O esquema está em seis migrações versionadas em `supabase/migrations/`. Foi aplicado e testado no Supabase local (PostgreSQL 17). Nenhum projeto hospedado está ligado ao repositório. `supabase/seed.sql` fica vazio: somente `supabase/tests/database_security_test.sql` usa identidades fictícias, dentro de transação revertida.
+O esquema está em migrações versionadas em `supabase/migrations/`. Foi aplicado e testado no Supabase local (PostgreSQL 17). Nenhum projeto hospedado está ligado ao repositório. `supabase/seed.sql` fica vazio; verificações locais usam identidades fictícias dentro de transações revertidas.
 
 ## Tabelas
 
@@ -38,7 +38,15 @@ O `INSERT` de um espaço cria seu administrador em um gatilho `AFTER INSERT`. Po
 
 ## Armazenamento
 
-O esquema contém somente metadados de mídia e limita MIME/tamanho a 50 MiB. **Não existe bucket nem política de Storage nesta etapa.** Portanto nenhum upload ou URL de mídia deve ser exposto até criar bucket privado, políticas `storage.objects` e testes de acesso em 2B/Etapa 4. Caminho no banco não significa arquivo existente. Não usar bucket público nem URL permanente.
+Na Etapa 4A, a migração `20261115120000_private_family_media_storage.sql` cria o bucket privado `family-media`, com limite de 20 MiB por objeto e MIME `image/jpeg`, `image/png` ou `image/webp`. A tabela `media` mantém seu limite anterior de 50 MiB; o bucket impõe o limite mais restrito para fotos, sem alterar o esquema existente. O bucket é definido somente na migração, não em `config.toml`. Caminho no banco não significa arquivo existente.
+
+As políticas de `storage.objects` exigem caminho canônico `space_id/event_id/media_id/arquivo`, com UUIDs minúsculos e nome final simples, e um registro `media` ativo cujo caminho, espaço e evento coincidam exatamente. O evento também precisa estar ativo. Leitura requer associação ao espaço; upload requer papel `admin` ou `contributor` e `uploaded_by = auth.uid()`. Assim, um colaborador pode fotografar evento de outro autor sem editá-lo. Não há políticas `UPDATE` ou `DELETE` para objetos: upsert, substituição, movimento e remoção física por clientes ficam bloqueados. A exclusão lógica de `media` corta listagem, leitura autenticada e novas assinaturas; o administrador também não lê objetos de mídias excluídas. Em 4D, a limpeza física deverá ser feita por fluxo servidor auditado, após período de recuperação e confirmação do vínculo, nunca por exclusão indiscriminada do cliente.
+
+A migração 4B `20261115130000_media_upload_state.sql` acrescenta `media.upload_status` (`pending`/`ready`) sem alterar migrações anteriores. O estado padrão é `pending`; registros preexistentes com objeto correspondente são preservados como `ready`. Somente `public.finalize_media_upload` marca um registro como pronto, após conferir usuário autor, permissão, evento ativo, caminho, MIME e tamanho do objeto no Storage. A listagem da aplicação filtra `ready`; a política de leitura de objetos também exige `ready`. O autor pode ver seu registro pendente para repetir uma tentativa com o mesmo UUID, mas isso não libera o arquivo. Não há exclusão física automática de falhas parciais.
+
+Depois de aplicar as migrações pendentes no Supabase local com `HOME=/tmp SUPABASE_DISABLE_TELEMETRY=1 npx supabase migration up`, a Etapa 4B pode ser testada manualmente em `/eventos/<id>`: entre como administrador ou colaborador, selecione o espaço, abra um evento existente, escolha fotos JPEG/PNG/WebP e confirme. A lista simples mostra apenas envios concluídos; leitores não recebem o formulário. Não use `db reset`.
+
+Para aplicar ao banco local existente, com a stack deste projeto já iniciada, use `HOME=/tmp SUPABASE_DISABLE_TELEMETRY=1 npx supabase migration up` na raiz. O comando aplica somente migrações pendentes; não use `db reset` nem conexão remota. Confira `storage.buckets` e `pg_policies` depois. Não é necessário reiniciar a stack para aplicar esta migração. A verificação 4A usou identidades e metadados fictícios em uma transação revertida, exercitando a RLS real de `storage.objects`; não realizou upload HTTP de bytes.
 
 ## Operação local
 

@@ -5,7 +5,10 @@
 - [x] Etapa 2A: Supabase local, esquema versionado, RLS, grants, auditoria e tipos gerados; 68 testes pgTAP passaram.
 - [x] Etapa 2B.1: login, logout, recuperação de senha, sessão SSR e proteção de rotas com Supabase Auth.
 - [x] Etapa 2B.2: criação e seleção do espaço, convites por e-mail, aceite atômico, visualização de membros e auditoria.
-- [ ] Segurança de Storage: bucket privado, políticas e testes antes do primeiro upload (Etapa 4).
+- [x] Etapa 4A: bucket privado, políticas de Storage e verificações RLS locais antes do primeiro upload.
+- [x] Etapa 4B: upload privado de fotos nos detalhes do evento, estado pendente/concluído e verificações HTTP locais.
+- [ ] Etapa 4C: galeria real e URLs assinadas curtas após autorização.
+- [ ] Etapa 4D: exclusão lógica, auditoria e limpeza física controlada de arquivos.
 - [x] Etapa 3A: cadastro, listagem, detalhes, edição por autoria e exclusão lógica de eventos no espaço ativo, com datas de precisão variável.
 - [x] Etapa 3B: cadastro, listagem e edição de pessoas; vínculo e remoção de participantes nos eventos conforme RLS.
 - [ ] Etapa 4: upload de fotos, galeria e mídia privada.
