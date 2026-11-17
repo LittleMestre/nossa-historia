@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute, Link, useRouteContext } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -22,6 +22,7 @@ export const Route = createFileRoute('/entrar')({
 })
 
 function LoginPage() {
+  const { user } = useRouteContext({ from: '__root__' })
   const { available: googleAvailable } = Route.useLoaderData()
   const { oauth: oauthStatus } = Route.useSearch()
   const [serverError, setServerError] = useState('')
@@ -63,6 +64,7 @@ function LoginPage() {
       <p className="eyebrow">Álbum privado</p>
       <h1 id="login-title">Entre na Nossa História</h1>
       <p>Use o acesso recebido pela sua família.</p>
+      {user && <p role="status">Conectado como: <strong>{user.email}</strong>. Você pode escolher outra conta abaixo.</p>}
       <form onSubmit={handleSubmit(onSubmit)} noValidate>
         <label htmlFor="email">E-mail</label>
         <input

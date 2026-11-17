@@ -2,6 +2,7 @@ import {
   Link,
   Outlet,
   useRouteContext,
+  useRouter,
   useRouterState,
 } from '@tanstack/react-router'
 import {
@@ -26,6 +27,7 @@ const navigation = [
 
 export function AppShell() {
   const { user, activeSpace } = useRouteContext({ from: '__root__' })
+  const router = useRouter()
   const [loggingOut, setLoggingOut] = useState(false)
   const [logoutError, setLogoutError] = useState(false)
   const pathname = useRouterState({
@@ -44,7 +46,8 @@ export function AppShell() {
     try {
       const result = await logout()
       if (!result.ok) throw new Error('logout failed')
-      window.location.assign('/entrar')
+      router.options.context.queryClient.clear()
+      window.location.replace('/entrar')
     } catch {
       setLoggingOut(false)
       setLogoutError(true)
@@ -99,16 +102,14 @@ export function AppShell() {
               </Link>
             )}
             <ThemeToggle />
-            {user && (
-              <button
-                type="button"
-                className="logout-button"
-                onClick={handleLogout}
-                disabled={loggingOut}
-              >
-                {loggingOut ? 'Saindo…' : 'Sair'}
-              </button>
-            )}
+            {user && <details className="account-menu">
+              <summary title={user.email}><span className="account-label">{user.email}</span><span className="account-label-mobile">Conta</span></summary>
+              <div className="account-menu-panel">
+                <p>Conectado como:<br /><strong>{user.email}</strong></p>
+                <button type="button" onClick={handleLogout} disabled={loggingOut}>Trocar conta</button>
+                <button type="button" onClick={handleLogout} disabled={loggingOut}>{loggingOut ? 'Saindo…' : 'Sair'}</button>
+              </div>
+            </details>}
             {logoutError && (
               <span role="alert">Não foi possível sair. Tente novamente.</span>
             )}

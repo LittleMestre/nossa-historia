@@ -1,4 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { setResponseHeader } from '@tanstack/react-start/server'
 import {
   finishGoogleOAuth,
   safeInviteToken,
@@ -9,6 +10,7 @@ export const Route = createFileRoute('/auth/callback')({
   server: {
     handlers: {
       GET: async ({ request }) => {
+        setResponseHeader('Cache-Control', 'private, no-store')
         const url = new URL(request.url)
         const token = safeInviteToken(url.searchParams.get('token'))
         const configuredOrigin =

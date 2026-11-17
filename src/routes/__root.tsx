@@ -36,7 +36,10 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     if (
       user &&
       location.pathname === '/entrar' &&
-      !new URLSearchParams(location.searchStr).has('token')
+      !new URLSearchParams(location.searchStr).has('token') &&
+      !['cancelled', 'failed', 'unavailable'].includes(
+        new URLSearchParams(location.searchStr).get('oauth') ?? '',
+      )
     )
       throw redirect({ to: '/espacos' })
     if (user && !publicPath) {
