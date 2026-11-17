@@ -19,6 +19,7 @@ import { Route as EspacosRouteImport } from './routes/espacos'
 import { Route as EventosRouteImport } from './routes/eventos'
 import { Route as GaleriaRouteImport } from './routes/galeria'
 import { Route as LinhaDoTempoRouteImport } from './routes/linha-do-tempo'
+import { Route as LixeiraRouteImport } from './routes/lixeira'
 import { Route as MembrosRouteImport } from './routes/membros'
 import { Route as NovaSenhaRouteImport } from './routes/nova-senha'
 import { Route as ParticipantesRouteImport } from './routes/participantes'
@@ -78,6 +79,11 @@ const LinhaDoTempoRoute = LinhaDoTempoRouteImport.update({
   path: '/linha-do-tempo',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LixeiraRoute = LixeiraRouteImport.update({
+  id: '/lixeira',
+  path: '/lixeira',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MembrosRoute = MembrosRouteImport.update({
   id: '/membros',
   path: '/membros',
@@ -130,6 +136,7 @@ export interface FileRoutesByFullPath {
   '/eventos': typeof EventosRoute
   '/galeria': typeof GaleriaRoute
   '/linha-do-tempo': typeof LinhaDoTempoRoute
+  '/lixeira': typeof LixeiraRoute
   '/membros': typeof MembrosRoute
   '/nova-senha': typeof NovaSenhaRoute
   '/participantes': typeof ParticipantesRoute
@@ -150,6 +157,7 @@ export interface FileRoutesByTo {
   '/eventos': typeof EventosRoute
   '/galeria': typeof GaleriaRoute
   '/linha-do-tempo': typeof LinhaDoTempoRoute
+  '/lixeira': typeof LixeiraRoute
   '/membros': typeof MembrosRoute
   '/nova-senha': typeof NovaSenhaRoute
   '/participantes': typeof ParticipantesRoute
@@ -171,6 +179,7 @@ export interface FileRoutesById {
   '/eventos': typeof EventosRoute
   '/galeria': typeof GaleriaRoute
   '/linha-do-tempo': typeof LinhaDoTempoRoute
+  '/lixeira': typeof LixeiraRoute
   '/membros': typeof MembrosRoute
   '/nova-senha': typeof NovaSenhaRoute
   '/participantes': typeof ParticipantesRoute
@@ -193,6 +202,7 @@ export interface FileRouteTypes {
     | '/eventos'
     | '/galeria'
     | '/linha-do-tempo'
+    | '/lixeira'
     | '/membros'
     | '/nova-senha'
     | '/participantes'
@@ -213,6 +223,7 @@ export interface FileRouteTypes {
     | '/eventos'
     | '/galeria'
     | '/linha-do-tempo'
+    | '/lixeira'
     | '/membros'
     | '/nova-senha'
     | '/participantes'
@@ -233,6 +244,7 @@ export interface FileRouteTypes {
     | '/eventos'
     | '/galeria'
     | '/linha-do-tempo'
+    | '/lixeira'
     | '/membros'
     | '/nova-senha'
     | '/participantes'
@@ -254,6 +266,7 @@ export interface RootRouteChildren {
   EventosRoute: typeof EventosRoute
   GaleriaRoute: typeof GaleriaRoute
   LinhaDoTempoRoute: typeof LinhaDoTempoRoute
+  LixeiraRoute: typeof LixeiraRoute
   MembrosRoute: typeof MembrosRoute
   NovaSenhaRoute: typeof NovaSenhaRoute
   ParticipantesRoute: typeof ParticipantesRoute
@@ -336,6 +349,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LinhaDoTempoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lixeira': {
+      id: '/lixeira'
+      path: '/lixeira'
+      fullPath: '/lixeira'
+      preLoaderRoute: typeof LixeiraRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/membros': {
       id: '/membros'
       path: '/membros'
@@ -406,6 +426,7 @@ const rootRouteChildren: RootRouteChildren = {
   EventosRoute: EventosRoute,
   GaleriaRoute: GaleriaRoute,
   LinhaDoTempoRoute: LinhaDoTempoRoute,
+  LixeiraRoute: LixeiraRoute,
   MembrosRoute: MembrosRoute,
   NovaSenhaRoute: NovaSenhaRoute,
   ParticipantesRoute: ParticipantesRoute,

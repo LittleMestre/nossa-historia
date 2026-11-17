@@ -5,10 +5,13 @@
 - [x] Etapa 2A: Supabase local, esquema versionado, RLS, grants, auditoria e tipos gerados; 68 testes pgTAP passaram.
 - [x] Etapa 2B.1: login, logout, recuperação de senha, sessão SSR e proteção de rotas com Supabase Auth.
 - [x] Etapa 2B.2: criação e seleção do espaço, convites por e-mail, aceite atômico, visualização de membros e auditoria.
-- [ ] Segurança de Storage: bucket privado, políticas e testes antes do primeiro upload (Etapa 4).
+- [x] Etapa 4A: bucket privado, políticas de Storage e verificações RLS locais antes do primeiro upload.
+- [x] Etapa 4B: upload privado de fotos nos detalhes do evento, estado pendente/concluído e verificações HTTP locais.
+- [x] Etapa 4C: galeria real, visualização ampliada e URLs assinadas de 60 segundos após autorização.
+- [ ] Etapa 4D: exclusão lógica, lixeira administrativa, restauração auditada e diagnóstico de uploads pendentes implementados; aguardando validação manual.
 - [x] Etapa 3A: cadastro, listagem, detalhes, edição por autoria e exclusão lógica de eventos no espaço ativo, com datas de precisão variável.
 - [x] Etapa 3B: cadastro, listagem e edição de pessoas; vínculo e remoção de participantes nos eventos conforme RLS.
-- [ ] Etapa 4: upload de fotos, galeria e mídia privada.
+- [ ] Etapa 4: upload de fotos, galeria privada e gerenciamento reversível de fotografias implementados; aguardando validação manual da 4D.
 - [ ] Etapa 5: linha do tempo e filtros.
 - [ ] Etapa 6: busca textual e estruturada com paginação.
 - [ ] Etapa 7: comentários, lembranças, subeventos e moderação auditada.
@@ -33,3 +36,7 @@ Na Etapa 2B.2, o administrador convida leitores ou colaboradores por e-mail. O S
 Na Etapa 3A, `/eventos` usa registros reais do espaço ativo para criar e listar acontecimentos; `/eventos/$eventId` mostra detalhes, permite edição ao autor ou administrador e exclusão lógica com confirmação. A data mantém apenas ano, mês e dia informados, inclusive intervalos e datas desconhecidas. As funções do servidor validam entrada com Zod, confirmam identidade e espaço ativo e usam o cliente Supabase da sessão, sujeito às políticas RLS e FKs compostas existentes. Não houve migração nem alteração do Storage. Categorias e locais existentes podem ser selecionados, mas o cadastro desses catálogos fica para etapa futura. A espiral e a linha do tempo ainda não consomem esses eventos.
 
 Na Etapa 3B, `/participantes` lista e cadastra pessoas sem conta de autenticação; a rota de detalhes permite edição ao autor ou administrador. Os detalhes de eventos mostram pessoas vinculadas e permitem buscar, vincular e remover associações. As políticas existentes de `event_participants` limitam essas operações ao autor do evento ou administrador, inclusive quando outro colaborador criou o vínculo; colaboradores não gerenciam participantes de eventos alheios. A unicidade do nome por espaço é garantida pelo índice existente. Não há exclusão de pessoas nesta etapa porque `people` não possui exclusão lógica e pode estar referenciada por eventos. A exclusão segura exige decisão de domínio futura. Não houve migração nem mudança em Auth ou Storage.
+
+Na Etapa 4C, eventos mostram miniaturas privadas e a galeria lista até 24 fotos por página do espaço ativo, com ampliação e navegação por teclado. O servidor valida sessão, espaço, associação, estado `ready`, ausência de exclusão, evento ativo e caminho exato antes de assinar por 60 segundos usando a sessão do usuário. Miniaturas hospedadas usam transformação privada do Storage; o Supabase local não oferece transformação e entrega o original como fallback, podendo transferir até 20 MiB por imagem. URLs são renovadas aos 45 segundos e quando a aba volta a ficar visível. Não houve alteração de políticas ou migração. URLs já emitidas permanecem válidas até expirar.
+
+Na Etapa 4D, o autor ou administrador pode excluir uma fotografia pronta logicamente; o administrador consulta `/lixeira` e restaura apenas quando o registro e os metadados do objeto original ainda correspondem. A auditoria registra `photo_delete` e `photo_restore` para todos os autores. A lixeira mostra metadados, sem miniaturas ou URLs de fotos excluídas. Uploads `pending` aparecem para o administrador com diagnóstico `missing`, `valid` ou `mismatch`; após 24 horas são rotulados como possivelmente interrompidos, sem mudança automática de estado. Um objeto válido pode ser confirmado pelo administrador. Objetos do espaço sem registro `media` são listados para investigação. Nenhum objeto ou registro é apagado fisicamente. Limpeza controlada e revogação emergencial de URLs emitidas ficam para uma etapa posterior ao MVP.

@@ -40,13 +40,15 @@ export const login = createServerFn({ method: 'POST' })
     const supabase = createSupabaseServerClient()
     const { data: auth, error } = await supabase.auth.signInWithPassword(data)
     if (error) return { error: 'E-mail ou senha inválidos.' }
+    const { clearActiveSpaceCookie } = await import('../spaces/cookies.server')
+    clearActiveSpaceCookie()
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('id')
       .eq('id', auth.user.id)
       .maybeSingle()
     if (profileError) {
-      await supabase.auth.signOut()
+      await supabase.auth.signOut({ scope: 'local' })
       return { error: 'Não foi possível carregar seu perfil.' }
     }
     if (!profile) {
@@ -59,7 +61,7 @@ export const login = createServerFn({ method: 'POST' })
         .from('profiles')
         .insert({ id: auth.user.id, display_name: displayName })
       if (insertError) {
-        await supabase.auth.signOut()
+        await supabase.auth.signOut({ scope: 'local' })
         return { error: 'Não foi possível preparar seu perfil.' }
       }
     }
@@ -68,7 +70,11 @@ export const login = createServerFn({ method: 'POST' })
 
 export const logout = createServerFn({ method: 'POST' }).handler(async () => {
   const supabase = createSupabaseServerClient()
-  const { error } = await supabase.auth.signOut()
+  const { error } = await supabase.auth.signOut({ scope: 'local' })
+  if (!error) {
+    const { clearActiveSpaceCookie } = await import('../spaces/cookies.server')
+    clearActiveSpaceCookie()
+  }
   return { ok: !error }
 })
 

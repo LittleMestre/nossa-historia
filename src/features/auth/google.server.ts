@@ -1,4 +1,5 @@
 import { createSupabaseServerClient } from '../../lib/supabase/server'
+import { clearActiveSpaceCookie } from '../spaces/cookies.server'
 import { z } from 'zod'
 
 const inviteToken = z.string().regex(/^[0-9a-f]{64}$/)
@@ -32,11 +33,18 @@ export async function startGoogleOAuth(origin: string, token: string | null) {
   const callback = new URL('/auth/callback', origin)
   if (token) callback.searchParams.set('token', token)
   const supabase = createSupabaseServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (user) {
+    const { error: signOutError } = await supabase.auth.signOut({ scope: 'local' })
+    if (signOutError) return null
+  }
+  clearActiveSpaceCookie()
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
       redirectTo: callback.toString(),
       skipBrowserRedirect: true,
+      queryParams: { prompt: 'select_account' },
     },
   })
   return error ? null : data.url
@@ -44,14 +52,14 @@ export async function startGoogleOAuth(origin: string, token: string | null) {
 
 export async function finishGoogleOAuth(code: string) {
   const supabase = createSupabaseServerClient()
-  const { error } = await supabase.auth.exchangeCodeForSession(code)
-  if (error) return false
+  const { data: exchanged, error } = await supabase.auth.exchangeCodeForSession(code)
+  if (error || !exchanged.user || !exchanged.session) return false
   const {
     data: { user },
     error: userError,
   } = await supabase.auth.getUser()
-  if (userError || !user || !user.email_confirmed_at) {
-    await supabase.auth.signOut()
+  if (userError || !user || user.id !== exchanged.user.id || !user.email_confirmed_at) {
+    await supabase.auth.signOut({ scope: 'local' })
     return false
   }
   const { data: profile, error: profileError } = await supabase
@@ -60,7 +68,7 @@ export async function finishGoogleOAuth(code: string) {
     .eq('id', user.id)
     .maybeSingle()
   if (profileError) {
-    await supabase.auth.signOut()
+    await supabase.auth.signOut({ scope: 'local' })
     return false
   }
   if (!profile) {
@@ -73,7 +81,7 @@ export async function finishGoogleOAuth(code: string) {
       .from('profiles')
       .insert({ id: user.id, display_name: displayName })
     if (insertError) {
-      await supabase.auth.signOut()
+      await supabase.auth.signOut({ scope: 'local' })
       return false
     }
   }
