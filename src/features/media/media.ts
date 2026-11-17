@@ -31,10 +31,65 @@ export const getEventPhotos = createServerFn({ method: 'GET' })
     const { data: photos, error } = await supabase.from('media')
       .select('id, original_filename, file_size_bytes, description, created_at, uploaded_by')
       .eq('space_id', activeSpace.id).eq('event_id', data.eventId)
-      .eq('upload_status', 'ready').is('deleted_at', null)
+      .eq('upload_status', 'ready').eq('media_type', 'photo').is('deleted_at', null)
       .order('created_at', { ascending: false })
+      .limit(60)
     if (error) throw new Error('Não foi possível carregar as fotografias.')
     return { photos, canUpload: activeSpace.role !== 'viewer' }
+  })
+
+export const getGalleryPhotos = createServerFn({ method: 'GET' })
+  .validator(z.object({ page: z.number().int().min(0).max(1000) }))
+  .handler(async ({ data }) => {
+    const supabase = createSupabaseServerClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    const { activeSpace } = await getSpaceState()
+    if (!user || !activeSpace) return { photos: [], hasMore: false }
+    const { data: photos, error } = await supabase.from('media')
+      .select('id, description, created_at, original_filename, event_id, events!inner(title, deleted_at)')
+      .eq('space_id', activeSpace.id).eq('upload_status', 'ready')
+      .eq('media_type', 'photo').is('deleted_at', null)
+      .is('events.deleted_at', null)
+      .order('created_at', { ascending: false }).order('id', { ascending: false })
+      .range(data.page * 24, data.page * 24 + 24)
+    if (error) throw new Error('Não foi possível carregar a galeria.')
+    return { photos: photos.slice(0, 24).map(({ events, ...photo }) => ({
+      ...photo, eventTitle: events.title,
+    })), hasMore: photos.length > 24 }
+  })
+
+const signedFields = z.object({
+  ids: z.array(z.uuid()).min(1).max(60),
+  variant: z.enum(['thumbnail', 'original']),
+})
+
+export const getSignedPhotoUrls = createServerFn({ method: 'POST' })
+  .validator(signedFields)
+  .handler(async ({ data }) => {
+    const supabase = createSupabaseServerClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    const { activeSpace } = await getSpaceState()
+    if (!user || !activeSpace) return { urls: {} as Record<string, string> }
+    const ids = [...new Set(data.ids)]
+    const { data: photos, error } = await supabase.from('media')
+      .select('id, event_id, space_id, storage_path, mime_type, events!inner(id, space_id, deleted_at)')
+      .eq('space_id', activeSpace.id).in('id', ids)
+      .eq('media_type', 'photo').eq('upload_status', 'ready').is('deleted_at', null)
+      .is('events.deleted_at', null)
+    if (error) throw new Error('Não foi possível verificar as fotografias.')
+    const localStorage = /localhost|127\.0\.0\.1/.test(process.env.VITE_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL || '')
+    const urls: Record<string, string> = {}
+    await Promise.all(photos.filter((photo) => {
+      const extension = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' }[photo.mime_type]
+      return extension && photo.events.id === photo.event_id && photo.events.space_id === activeSpace.id &&
+        photo.storage_path === `${activeSpace.id}/${photo.event_id}/${photo.id}/original.${extension}`
+    }).map(async (photo) => {
+      const { data: signed, error: signError } = await supabase.storage.from('family-media')
+        .createSignedUrl(photo.storage_path, 60, data.variant === 'thumbnail' && !localStorage
+          ? { transform: { width: 480, height: 360, resize: 'contain', quality: 70 } } : undefined)
+      if (!signError && signed) urls[photo.id] = signed.signedUrl
+    }))
+    return { urls }
   })
 
 export const uploadEventPhoto = createServerFn({ method: 'POST' })

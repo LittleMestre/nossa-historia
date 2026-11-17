@@ -7,11 +7,11 @@
 - [x] Etapa 2B.2: criação e seleção do espaço, convites por e-mail, aceite atômico, visualização de membros e auditoria.
 - [x] Etapa 4A: bucket privado, políticas de Storage e verificações RLS locais antes do primeiro upload.
 - [x] Etapa 4B: upload privado de fotos nos detalhes do evento, estado pendente/concluído e verificações HTTP locais.
-- [ ] Etapa 4C: galeria real e URLs assinadas curtas após autorização.
+- [x] Etapa 4C: galeria real, visualização ampliada e URLs assinadas de 60 segundos após autorização.
 - [ ] Etapa 4D: exclusão lógica, auditoria e limpeza física controlada de arquivos.
 - [x] Etapa 3A: cadastro, listagem, detalhes, edição por autoria e exclusão lógica de eventos no espaço ativo, com datas de precisão variável.
 - [x] Etapa 3B: cadastro, listagem e edição de pessoas; vínculo e remoção de participantes nos eventos conforme RLS.
-- [ ] Etapa 4: upload de fotos, galeria e mídia privada.
+- [ ] Etapa 4: upload de fotos, galeria e mídia privada; exclusão e limpeza auditadas ficam na 4D.
 - [ ] Etapa 5: linha do tempo e filtros.
 - [ ] Etapa 6: busca textual e estruturada com paginação.
 - [ ] Etapa 7: comentários, lembranças, subeventos e moderação auditada.
@@ -36,3 +36,5 @@ Na Etapa 2B.2, o administrador convida leitores ou colaboradores por e-mail. O S
 Na Etapa 3A, `/eventos` usa registros reais do espaço ativo para criar e listar acontecimentos; `/eventos/$eventId` mostra detalhes, permite edição ao autor ou administrador e exclusão lógica com confirmação. A data mantém apenas ano, mês e dia informados, inclusive intervalos e datas desconhecidas. As funções do servidor validam entrada com Zod, confirmam identidade e espaço ativo e usam o cliente Supabase da sessão, sujeito às políticas RLS e FKs compostas existentes. Não houve migração nem alteração do Storage. Categorias e locais existentes podem ser selecionados, mas o cadastro desses catálogos fica para etapa futura. A espiral e a linha do tempo ainda não consomem esses eventos.
 
 Na Etapa 3B, `/participantes` lista e cadastra pessoas sem conta de autenticação; a rota de detalhes permite edição ao autor ou administrador. Os detalhes de eventos mostram pessoas vinculadas e permitem buscar, vincular e remover associações. As políticas existentes de `event_participants` limitam essas operações ao autor do evento ou administrador, inclusive quando outro colaborador criou o vínculo; colaboradores não gerenciam participantes de eventos alheios. A unicidade do nome por espaço é garantida pelo índice existente. Não há exclusão de pessoas nesta etapa porque `people` não possui exclusão lógica e pode estar referenciada por eventos. A exclusão segura exige decisão de domínio futura. Não houve migração nem mudança em Auth ou Storage.
+
+Na Etapa 4C, eventos mostram miniaturas privadas e a galeria lista até 24 fotos por página do espaço ativo, com ampliação e navegação por teclado. O servidor valida sessão, espaço, associação, estado `ready`, ausência de exclusão, evento ativo e caminho exato antes de assinar por 60 segundos usando a sessão do usuário. Miniaturas hospedadas usam transformação privada do Storage; o Supabase local não oferece transformação e entrega o original como fallback, podendo transferir até 20 MiB por imagem. URLs são renovadas aos 45 segundos e quando a aba volta a ficar visível. Não houve alteração de políticas ou migração. A Etapa 4D cuidará da exclusão lógica, auditoria, limpeza física e revogação emergencial; URLs já emitidas permanecem válidas até expirar.

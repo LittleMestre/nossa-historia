@@ -9,7 +9,7 @@ TanStack Start entrega rotas React e funções de servidor no mesmo projeto. Tan
 1. Usuário autenticado solicita um evento pelo cliente Supabase com sessão.
 2. RLS confere associação ao espaço antes de ler ou gravar.
 3. Formulários validam entrada com Zod no servidor e no cliente para feedback.
-4. Fotos usarão caminhos `space_id/event_id/media_id/arquivo`; regras de Storage verificam o vínculo exato com `media`, evento ativo, membro e autoria na escrita. Na Etapa 4C, o servidor validará a sessão e o espaço antes de gerar URLs assinadas de curta duração.
+4. Fotos usam caminhos `space_id/event_id/media_id/arquivo`; regras de Storage verificam o vínculo exato com `media`, evento ativo, membro e autoria na escrita. Na Etapa 4C, o servidor valida a sessão e o espaço antes de gerar URLs assinadas de curta duração.
 
 Funções de servidor serão usadas para convites, operações administrativas, validação sensível e orquestração que não cabe em uma única transação do cliente. Secrets permanecem no ambiente do servidor. Erros enviados ao cliente não incluem detalhes internos.
 
@@ -22,9 +22,9 @@ Funções de servidor serão usadas para convites, operações administrativas, 
 - `supabase/migrations`: esquema, funções, índices e políticas SQL versionados.
 - `src/types/database.types.ts`: tipos gerados do PostgreSQL local; não substituem RLS.
 
-Não há mock de dados persistentes. As rotas da aplicação exigem sessão e ainda não exibem mídia de usuários. A linha do tempo horizontal recebe `TimelineEvent[]` e a galeria recebe um array tipado vazio, prontos para serem alimentados por consultas reais em etapas futuras. A ordenação e a posição visual da linha do tempo ficam em `src/components/timeline/timeline-model.ts`; o eixo e os controles não conhecem Supabase.
+Não há mock de dados persistentes. As rotas da aplicação exigem sessão. A linha do tempo horizontal recebe `TimelineEvent[]`; a galeria recebe fotos reais do espaço ativo. A ordenação e a posição visual da linha do tempo ficam em `src/components/timeline/timeline-model.ts`; o eixo e os controles não conhecem Supabase.
 
-Na Etapa 4A, `family-media` é privado e a RLS de `storage.objects` permite SELECT apenas de fotos ativas do próprio espaço e INSERT apenas ao autor do registro `media` com papel de contribuição. As operações de listagem, download autenticado e criação de URL assinada dependem de SELECT; nunca usar URL pública permanente ou chave `service_role` no navegador. URLs assinadas já emitidas são portadoras de acesso e podem continuar válidas até vencer mesmo após exclusão lógica ou remoção de membro. A Etapa 4C deverá usar validade curta e autorizar antes de assinar. A Etapa 4D deverá planejar revogação emergencial e limpeza física auditada, considerando esse intervalo de validade.
+Na Etapa 4A, `family-media` é privado e a RLS de `storage.objects` permite SELECT apenas de fotos ativas do próprio espaço e INSERT apenas ao autor do registro `media` com papel de contribuição. As operações de listagem, download autenticado e criação de URL assinada dependem de SELECT; nunca usar URL pública permanente ou chave `service_role` no navegador. A Etapa 4C consulta IDs em lote, confere sessão, associação ao espaço ativo, estado `ready`, evento ativo e caminho exato, então assina com o cliente SSR da própria sessão por 60 segundos. Miniaturas usam transformação privada 480 × 360 no Storage hospedado; no ambiente local, sem transformações, a URL do original funciona como fallback e pode transferir até 20 MiB. O cliente renova as URLs aos 45 segundos e ao voltar à aba. URLs assinadas já emitidas são portadoras de acesso e podem continuar válidas até vencer mesmo após exclusão lógica ou remoção de membro. A Etapa 4D deverá planejar revogação emergencial e limpeza física auditada, considerando esse intervalo de validade.
 
 ## Estado após a Etapa 2A
 

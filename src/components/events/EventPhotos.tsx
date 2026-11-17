@@ -3,6 +3,7 @@ import { useRouter } from '@tanstack/react-router'
 import { Button } from '../ui/button'
 import { uploadEventPhoto } from '../../features/media/media'
 import type { getEventPhotos } from '../../features/media/media'
+import { PrivatePhotos } from '../gallery/PrivatePhotos'
 
 type PhotoData = Awaited<ReturnType<typeof getEventPhotos>>
 type Selection = { id: string; file: File; status: 'selected' | 'sending' | 'done' | 'error'; error?: string; description?: string }
@@ -68,12 +69,7 @@ export function EventPhotos({ eventId, data }: { eventId: string; data: PhotoDat
 
   return <section className="event-panel" aria-labelledby="event-photos-title">
     <h2 id="event-photos-title" className="text-2xl font-semibold">Fotografias</h2>
-    {data.photos.length ? <ul className="mt-4 grid gap-3">{data.photos.map((photo) =>
-      <li key={photo.id} className="rounded-xl border border-border p-3">
-        <p className="font-medium break-all">{photo.original_filename}</p>
-        <p className="text-sm text-muted-foreground">{size(photo.file_size_bytes)} · Enviada em {new Date(photo.created_at).toLocaleDateString('pt-BR')}</p>
-        {photo.description && <p className="mt-1">{photo.description}</p>}
-      </li>)}</ul> : <p className="mt-3 text-muted-foreground">Ainda não há fotografias neste acontecimento.</p>}
+    <PrivatePhotos photos={data.photos} />
     {data.canUpload && <div className="event-form mt-5">
       <label className="grid gap-2 text-sm font-medium">Adicionar fotos
         <input ref={input} className="event-input" type="file" accept="image/jpeg,image/png,image/webp" multiple disabled={busy} onChange={(event) => choose(event.target.files)} />
