@@ -667,7 +667,31 @@ export type Database = {
     }
     Functions: {
       accept_invitation: { Args: { invite_token: string }; Returns: string }
+      confirm_pending_photo_upload: {
+        Args: { target_id: string; target_space: string }
+        Returns: boolean
+      }
+      delete_media_photo: { Args: { target_id: string }; Returns: boolean }
       finalize_media_upload: { Args: { target_id: string }; Returns: boolean }
+      list_orphan_photo_objects: {
+        Args: { page_index: number; target_space: string }
+        Returns: {
+          created_at: string
+          object_name: string
+        }[]
+      }
+      list_pending_photo_uploads: {
+        Args: { page_index: number; target_space: string }
+        Returns: {
+          created_at: string
+          event_active: boolean
+          event_title: string
+          id: string
+          object_state: string
+          original_filename: string
+        }[]
+      }
+      restore_media_photo: { Args: { target_id: string }; Returns: string }
     }
     Enums: {
       date_precision: 'day' | 'month' | 'year' | 'range' | 'unknown'

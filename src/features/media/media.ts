@@ -35,7 +35,10 @@ export const getEventPhotos = createServerFn({ method: 'GET' })
       .order('created_at', { ascending: false })
       .limit(60)
     if (error) throw new Error('Não foi possível carregar as fotografias.')
-    return { photos, canUpload: activeSpace.role !== 'viewer' }
+    return { photos: photos.map((photo) => ({
+      ...photo, canDelete: activeSpace.role === 'admin' ||
+        (activeSpace.role === 'contributor' && photo.uploaded_by === user.id),
+    })), canUpload: activeSpace.role !== 'viewer' }
   })
 
 export const getGalleryPhotos = createServerFn({ method: 'GET' })
@@ -46,7 +49,7 @@ export const getGalleryPhotos = createServerFn({ method: 'GET' })
     const { activeSpace } = await getSpaceState()
     if (!user || !activeSpace) return { photos: [], hasMore: false }
     const { data: photos, error } = await supabase.from('media')
-      .select('id, description, created_at, original_filename, event_id, events!inner(title, deleted_at)')
+      .select('id, description, created_at, original_filename, event_id, uploaded_by, events!inner(title, deleted_at)')
       .eq('space_id', activeSpace.id).eq('upload_status', 'ready')
       .eq('media_type', 'photo').is('deleted_at', null)
       .is('events.deleted_at', null)
@@ -55,6 +58,8 @@ export const getGalleryPhotos = createServerFn({ method: 'GET' })
     if (error) throw new Error('Não foi possível carregar a galeria.')
     return { photos: photos.slice(0, 24).map(({ events, ...photo }) => ({
       ...photo, eventTitle: events.title,
+      canDelete: activeSpace.role === 'admin' ||
+        (activeSpace.role === 'contributor' && photo.uploaded_by === user.id),
     })), hasMore: photos.length > 24 }
   })
 
@@ -90,6 +95,114 @@ export const getSignedPhotoUrls = createServerFn({ method: 'POST' })
       if (!signError && signed) urls[photo.id] = signed.signedUrl
     }))
     return { urls }
+  })
+
+const mediaAction = z.object({ mediaId: z.uuid() })
+const managementPage = z.object({ page: z.number().int().min(0).max(1000) })
+
+export const deletePhoto = createServerFn({ method: 'POST' })
+  .validator(mediaAction)
+  .handler(async ({ data }) => {
+    const supabase = createSupabaseServerClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    const { activeSpace } = await getSpaceState()
+    if (!user || !activeSpace || activeSpace.role === 'viewer')
+      return { error: 'Você não tem permissão para excluir esta fotografia.' }
+    const { data: photo } = await supabase.from('media')
+      .select('id, uploaded_by').eq('id', data.mediaId)
+      .eq('space_id', activeSpace.id).eq('media_type', 'photo')
+      .eq('upload_status', 'ready').is('deleted_at', null).maybeSingle()
+    if (!photo || (photo.uploaded_by !== user.id && activeSpace.role !== 'admin'))
+      return { error: 'Fotografia indisponível ou sem permissão para exclusão.' }
+    const { data: removed, error } = await supabase.rpc('delete_media_photo', { target_id: photo.id })
+    return { error: error || !removed ? 'Não foi possível excluir a fotografia.' : null }
+  })
+
+export const getPhotoTrash = createServerFn({ method: 'GET' })
+  .validator(managementPage)
+  .handler(async ({ data }) => {
+    const supabase = createSupabaseServerClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    const { activeSpace } = await getSpaceState()
+    if (!user || !activeSpace || activeSpace.role !== 'admin') return null
+    const { data: rows, error } = await supabase.from('media')
+      .select('id, original_filename, deleted_at, deleted_by, events!inner(title, deleted_at)')
+      .eq('space_id', activeSpace.id).eq('media_type', 'photo')
+      .eq('upload_status', 'ready').not('deleted_at', 'is', null)
+      .order('deleted_at', { ascending: false }).order('id', { ascending: false })
+      .range(data.page * 24, data.page * 24 + 24)
+    if (error) throw new Error('Não foi possível carregar a lixeira.')
+    const ids = [...new Set(rows.map((row) => row.deleted_by).filter((id): id is string => !!id))]
+    const { data: profiles, error: profileError } = ids.length
+      ? await supabase.from('profiles').select('id, display_name').in('id', ids)
+      : { data: [], error: null }
+    if (profileError) throw new Error('Não foi possível carregar os responsáveis.')
+    const names = new Map(profiles.map((profile) => [profile.id, profile.display_name]))
+    return { photos: rows.slice(0, 24).map(({ events, ...row }) => ({
+      ...row, eventTitle: events.title, eventActive: events.deleted_at === null,
+      deletedByName: row.deleted_by ? names.get(row.deleted_by) ?? null : null,
+    })), hasMore: rows.length > 24 }
+  })
+
+export const restorePhoto = createServerFn({ method: 'POST' })
+  .validator(mediaAction)
+  .handler(async ({ data }) => {
+    const supabase = createSupabaseServerClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    const { activeSpace } = await getSpaceState()
+    if (!user || !activeSpace || activeSpace.role !== 'admin')
+      return { error: 'Somente administradores podem restaurar fotografias.' }
+    const { data: photo } = await supabase.from('media').select('id')
+      .eq('id', data.mediaId).eq('space_id', activeSpace.id)
+      .eq('media_type', 'photo').not('deleted_at', 'is', null).maybeSingle()
+    if (!photo) return { error: 'Fotografia indisponível neste espaço.' }
+    const { data: result, error } = await supabase.rpc('restore_media_photo', { target_id: photo.id })
+    if (error) return { error: 'Não foi possível restaurar a fotografia.' }
+    if (result === 'missing_object') return { error: 'O arquivo original está ausente ou não corresponde ao registro. A fotografia permanece na lixeira.' }
+    return { error: result === 'restored' ? null : 'O evento precisa estar ativo para restaurar esta fotografia.' }
+  })
+
+export const getPendingPhotoUploads = createServerFn({ method: 'GET' })
+  .validator(managementPage)
+  .handler(async ({ data }) => {
+    const supabase = createSupabaseServerClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    const { activeSpace } = await getSpaceState()
+    if (!user || !activeSpace || activeSpace.role !== 'admin') return null
+    const { data: rows, error } = await supabase.rpc('list_pending_photo_uploads', {
+      target_space: activeSpace.id, page_index: data.page,
+    })
+    if (error) throw new Error('Não foi possível verificar os uploads pendentes.')
+    return { photos: rows.slice(0, 24), hasMore: rows.length > 24 }
+  })
+
+export const getOrphanPhotoObjects = createServerFn({ method: 'GET' })
+  .validator(managementPage)
+  .handler(async ({ data }) => {
+    const supabase = createSupabaseServerClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    const { activeSpace } = await getSpaceState()
+    if (!user || !activeSpace || activeSpace.role !== 'admin') return null
+    const { data: rows, error } = await supabase.rpc('list_orphan_photo_objects', {
+      target_space: activeSpace.id, page_index: data.page,
+    })
+    if (error) throw new Error('Não foi possível verificar os objetos sem registro.')
+    return { objects: rows.slice(0, 24), hasMore: rows.length > 24 }
+  })
+
+export const confirmPendingPhotoUpload = createServerFn({ method: 'POST' })
+  .validator(mediaAction)
+  .handler(async ({ data }) => {
+    const supabase = createSupabaseServerClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    const { activeSpace } = await getSpaceState()
+    if (!user || !activeSpace || activeSpace.role !== 'admin')
+      return { error: 'Somente administradores podem conferir uploads pendentes.' }
+    const { data: confirmed, error } = await supabase.rpc('confirm_pending_photo_upload', {
+      target_id: data.mediaId, target_space: activeSpace.id,
+    })
+    return { error: error || !confirmed
+      ? 'O arquivo ainda não está completo ou não corresponde ao registro. Nada foi alterado.' : null }
   })
 
 export const uploadEventPhoto = createServerFn({ method: 'POST' })

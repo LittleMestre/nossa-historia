@@ -1,4 +1,4 @@
-import { createFileRoute, useRouter } from '@tanstack/react-router'
+import { Link, createFileRoute, useRouteContext, useRouter } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { Images } from 'lucide-react'
 import { PageHeading } from '../components/layout/PageHeading'
@@ -14,6 +14,7 @@ export const Route = createFileRoute('/galeria')({
 
 function GalleryPage() {
   const first = Route.useLoaderData()
+  const { activeSpace } = useRouteContext({ from: '__root__' })
   const router = useRouter()
   const [more, setMore] = useState<typeof first.photos>([])
   const [page, setPage] = useState(0)
@@ -33,6 +34,7 @@ function GalleryPage() {
   }
   return <div className="inner-page">
     <PageHeading eyebrow="Retratos da nossa vida" title="Galeria" description="Fotografias dos acontecimentos compartilhados pela família." />
+    {activeSpace?.role === 'admin' && <Link className="event-back" to="/lixeira">Ver lixeira de fotografias</Link>}
     {photos.length ? <PrivatePhotos photos={photos} gallery /> : <EmptyState icon={Images} title="A galeria ainda espera suas histórias" description="As fotos enviadas pela família aparecerão aqui, organizadas por acontecimento." />}
     {hasMore && <Button className="mt-6" type="button" disabled={busy} onClick={() => void loadMore()}>{busy ? 'Carregando…' : 'Carregar mais fotos'}</Button>}
     {error && <p role="alert" className="auth-error">{error}</p>}

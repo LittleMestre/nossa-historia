@@ -98,8 +98,8 @@ function SpacesPage() {
           <Link to="/membros">Ver membros</Link>
           {activeSpace.role === 'admin' && (
             <>
-              {' '}
-              · <Link to="/convites">Gerenciar convites</Link>
+              {' '}· <Link to="/convites">Gerenciar convites</Link>
+              {' '}· <Link to="/lixeira">Lixeira de fotografias</Link>
             </>
           )}
         </p>
