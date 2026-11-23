@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import type { RefObject } from 'react'
 import { CalendarDays } from 'lucide-react'
 import { TimelineAxis } from './TimelineAxis'
 import { TimelineControls } from './TimelineControls'
@@ -7,22 +8,27 @@ import { TimelineFocusIndicator } from './TimelineFocusIndicator'
 import { TimelineYearNavigator } from './TimelineYearNavigator'
 import { createTimelineItems } from './timeline-model'
 import { useTimelinePhotos } from './useTimelinePhotos'
+import type { TimelinePhotoEntry } from './useTimelinePhotos'
 import type { TimelineEvent, TimelineItem } from './timeline-model'
 
 interface TimelineViewProps {
   events: TimelineEvent[]
   hasUndated?: boolean
+  initialFocusKey?: string
+  photoCache?: RefObject<Map<string, TimelinePhotoEntry>>
   showDetailsLink?: boolean
 }
 
 export function TimelineView({
   events,
   hasUndated = false,
+  initialFocusKey = 'today',
+  photoCache,
   showDetailsLink = true,
 }: TimelineViewProps) {
   const [today] = useState(() => new Date())
   const [jumpYear, setJumpYear] = useState<number | null>(null)
-  const [focusedKey, setFocusedKey] = useState('today')
+  const [focusedKey, setFocusedKey] = useState(initialFocusKey)
   const items = useMemo(
     () => createTimelineItems(events, today, jumpYear),
     [events, today, jumpYear],
@@ -30,8 +36,8 @@ export function TimelineView({
   const viewportRef = useRef<HTMLDivElement>(null)
   const slotsRef = useRef(new Map<string, HTMLDivElement>())
   const [nearIds, setNearIds] = useState<string[]>([])
-  const { photos, error: photoError } = useTimelinePhotos(nearIds)
-  const pendingScrollRef = useRef<string | null>('today')
+  const { photos, error: photoError } = useTimelinePhotos(nearIds, photoCache)
+  const pendingScrollRef = useRef<string | null>(initialFocusKey)
   const dragRef = useRef<{ x: number; scroll: number; moved: boolean } | null>(
     null,
   )
@@ -44,6 +50,13 @@ export function TimelineView({
   const focusedItem = items[focusedIndex]
   const focusedYear =
     focusedItem.kind === 'event' ? focusedItem.event.year : focusedItem.year
+
+  useEffect(() => {
+    if (items.some((item) => item.key === focusedKey)) return
+    const next = items.find((item) => item.kind === 'event')?.key ?? 'today'
+    setFocusedKey(next)
+    pendingScrollRef.current = next
+  }, [items, focusedKey])
 
   function scrollToItem(key: string, behavior: ScrollBehavior = 'smooth') {
     const viewport = viewportRef.current

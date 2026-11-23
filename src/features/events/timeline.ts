@@ -9,7 +9,7 @@ type EventRow = Database['public']['Tables']['events']['Row']
 type TimelineRow = Pick<EventRow,
   'id' | 'title' | 'date_precision' | 'start_year' | 'start_month' | 'start_day' |
   'end_year' | 'end_month' | 'end_day' | 'approximate_date_label' |
-  'category_id' | 'timeline_position'
+  'category_id' | 'timeline_position' | 'moment_type'
 >
 
 export interface UndatedEvent {
@@ -17,6 +17,8 @@ export interface UndatedEvent {
   title: string
   dateLabel: string
   category: string | null
+  categoryId: string | null
+  momentType: EventRow['moment_type']
 }
 
 export function adaptTimelineEvent(row: TimelineRow, category: string | null): TimelineEvent | null {
@@ -29,6 +31,10 @@ export function adaptTimelineEvent(row: TimelineRow, category: string | null): T
     month: row.start_month,
     day: row.start_day,
     category,
+    categoryId: row.category_id,
+    momentType: row.moment_type,
+    datePrecision: row.date_precision,
+    endYear: row.end_year,
     placement: row.timeline_position === 'auto' ? null : row.timeline_position,
   }
 }
@@ -43,14 +49,14 @@ export const getTimelineEvents = createServerFn({ method: 'GET' }).handler(async
   if (!activeSpace) throw new Error('Selecione um espaço familiar para continuar.')
 
   const { data: categories, error: categoryError } = await supabase
-    .from('categories').select('id, name').eq('space_id', activeSpace.id)
+    .from('categories').select('id, name').eq('space_id', activeSpace.id).order('name')
   if (categoryError) throw new Error('Não foi possível carregar as categorias.')
   const categoryNames = new Map(categories.map(({ id, name }) => [id, name]))
   const events: TimelineEvent[] = []
   const undated: UndatedEvent[] = []
   for (let offset = 0; ; offset += PAGE_SIZE) {
     const { data, error } = await supabase.from('events')
-      .select('id, title, date_precision, start_year, start_month, start_day, end_year, end_month, end_day, approximate_date_label, category_id, timeline_position')
+      .select('id, title, date_precision, start_year, start_month, start_day, end_year, end_month, end_day, approximate_date_label, category_id, timeline_position, moment_type')
       .eq('space_id', activeSpace.id)
       .is('deleted_at', null)
       .is('parent_event_id', null)
@@ -61,9 +67,9 @@ export const getTimelineEvents = createServerFn({ method: 'GET' }).handler(async
       const category = row.category_id ? categoryNames.get(row.category_id) ?? null : null
       const event = adaptTimelineEvent(row, category)
       if (event) events.push(event)
-      else undated.push({ id: row.id, title: row.title, dateLabel: formatEventDate(row), category })
+      else undated.push({ id: row.id, title: row.title, dateLabel: formatEventDate(row), category, categoryId: row.category_id, momentType: row.moment_type })
     }
     if (data.length < PAGE_SIZE) break
   }
-  return { events, undated, canCreate: activeSpace.role !== 'viewer' }
+  return { events, undated, categories, canCreate: activeSpace.role !== 'viewer' }
 })

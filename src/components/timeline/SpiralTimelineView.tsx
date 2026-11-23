@@ -1,12 +1,14 @@
 import { Link } from '@tanstack/react-router'
 import { ArrowUpRight, CalendarDays } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import type { RefObject } from 'react'
 import { TimelineControls } from './TimelineControls'
 import { TimelineFocusIndicator } from './TimelineFocusIndicator'
 import { TimelineYearNavigator } from './TimelineYearNavigator'
 import { createTimelineItems } from './timeline-model'
 import { PhotoMosaic } from './PhotoMosaic'
 import { useTimelinePhotos } from './useTimelinePhotos'
+import type { TimelinePhotoEntry } from './useTimelinePhotos'
 import type { TimelineEvent, TimelineItem } from './timeline-model'
 import {
   DESKTOP_SPIRAL,
@@ -20,6 +22,8 @@ import {
 interface SpiralTimelineViewProps {
   events: TimelineEvent[]
   hasUndated?: boolean
+  initialFocusKey?: string
+  photoCache?: RefObject<Map<string, TimelinePhotoEntry>>
   showDetailsLink?: boolean
 }
 
@@ -29,11 +33,13 @@ const precision = (value: number) => Number(value.toFixed(4))
 export function SpiralTimelineView({
   events,
   hasUndated = false,
+  initialFocusKey = 'today',
+  photoCache,
   showDetailsLink = true,
 }: SpiralTimelineViewProps) {
   const [today] = useState(() => new Date())
   const [jumpYear, setJumpYear] = useState<number | null>(null)
-  const [focusedKey, setFocusedKey] = useState('today')
+  const [focusedKey, setFocusedKey] = useState(initialFocusKey)
   const items = useMemo(
     () => createTimelineItems(events, today, jumpYear),
     [events, today, jumpYear],
@@ -61,6 +67,15 @@ export function SpiralTimelineView({
   const reduceRef = useRef(false)
   const targetRef = useRef(targetIndex)
   targetRef.current = targetIndex
+
+  useEffect(() => {
+    if (items.some((item) => item.key === focusedKey)) return
+    const next = items.find((item) => item.kind === 'event')?.key ?? 'today'
+    const index = items.findIndex((item) => item.key === next)
+    setFocusedKey(next)
+    animRef.current = index
+    setAnim(index)
+  }, [items, focusedKey])
 
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 720px)')
@@ -187,6 +202,7 @@ export function SpiralTimelineView({
     .map((item, k) => ({ item, index: start + k }))
   const { photos, error: photoError } = useTimelinePhotos(
     visible.flatMap(({ item }) => item.kind === 'event' ? [item.event.id] : []),
+    photoCache,
   )
   // trilha da hélice (pontos discretos ao longo do caminho)
   const trail = useMemo(() => {
