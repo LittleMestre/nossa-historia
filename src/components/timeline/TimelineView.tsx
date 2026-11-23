@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import type { RefObject } from 'react'
 import { CalendarDays } from 'lucide-react'
 import { TimelineAxis } from './TimelineAxis'
 import { TimelineControls } from './TimelineControls'
@@ -6,27 +7,37 @@ import { TimelineEventCard } from './TimelineEventCard'
 import { TimelineFocusIndicator } from './TimelineFocusIndicator'
 import { TimelineYearNavigator } from './TimelineYearNavigator'
 import { createTimelineItems } from './timeline-model'
+import { useTimelinePhotos } from './useTimelinePhotos'
+import type { TimelinePhotoEntry } from './useTimelinePhotos'
 import type { TimelineEvent, TimelineItem } from './timeline-model'
 
 interface TimelineViewProps {
   events: TimelineEvent[]
+  hasUndated?: boolean
+  initialFocusKey?: string
+  photoCache?: RefObject<Map<string, TimelinePhotoEntry>>
   showDetailsLink?: boolean
 }
 
 export function TimelineView({
   events,
+  hasUndated = false,
+  initialFocusKey = 'today',
+  photoCache,
   showDetailsLink = true,
 }: TimelineViewProps) {
   const [today] = useState(() => new Date())
   const [jumpYear, setJumpYear] = useState<number | null>(null)
-  const [focusedKey, setFocusedKey] = useState('today')
+  const [focusedKey, setFocusedKey] = useState(initialFocusKey)
   const items = useMemo(
     () => createTimelineItems(events, today, jumpYear),
     [events, today, jumpYear],
   )
   const viewportRef = useRef<HTMLDivElement>(null)
   const slotsRef = useRef(new Map<string, HTMLDivElement>())
-  const pendingScrollRef = useRef<string | null>('today')
+  const [nearIds, setNearIds] = useState<string[]>([])
+  const { photos, error: photoError } = useTimelinePhotos(nearIds, photoCache)
+  const pendingScrollRef = useRef<string | null>(initialFocusKey)
   const dragRef = useRef<{ x: number; scroll: number; moved: boolean } | null>(
     null,
   )
@@ -39,6 +50,13 @@ export function TimelineView({
   const focusedItem = items[focusedIndex]
   const focusedYear =
     focusedItem.kind === 'event' ? focusedItem.event.year : focusedItem.year
+
+  useEffect(() => {
+    if (items.some((item) => item.key === focusedKey)) return
+    const next = items.find((item) => item.kind === 'event')?.key ?? 'today'
+    setFocusedKey(next)
+    pendingScrollRef.current = next
+  }, [items, focusedKey])
 
   function scrollToItem(key: string, behavior: ScrollBehavior = 'smooth') {
     const viewport = viewportRef.current
@@ -59,6 +77,28 @@ export function TimelineView({
       scrollToItem(pending, pending === 'today' ? 'instant' : 'smooth')
       pendingScrollRef.current = null
     }
+  }, [items])
+
+  useEffect(() => {
+    const viewport = viewportRef.current
+    if (!viewport) return
+    const near = new Set<string>()
+    const eventKeys = new Set(items.filter((item) => item.kind === 'event').map((item) => item.key))
+    const observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        const id = (entry.target as HTMLElement).dataset.timelineKey
+        if (!id || !eventKeys.has(id)) continue
+        if (entry.isIntersecting) near.add(id)
+        else near.delete(id)
+      }
+      setNearIds([...near].sort())
+    }, { root: viewport, rootMargin: '0px 400px' })
+    for (const item of items) {
+      if (item.kind !== 'event') continue
+      const slot = slotsRef.current.get(item.key)
+      if (slot) observer.observe(slot)
+    }
+    return () => observer.disconnect()
   }, [items])
 
   useEffect(
@@ -218,6 +258,8 @@ export function TimelineView({
                   distance={Math.abs(index - focusedIndex)}
                   onSelect={() => select(item.key)}
                   showDetailsLink={showDetailsLink}
+                  photoUrls={photos[item.event.id]}
+                  photoError={photoError}
                 />
               ) : (
                 <TimeMarker
@@ -232,10 +274,9 @@ export function TimelineView({
         {events.length === 0 && (
           <div className="cinema-empty">
             <CalendarDays size={20} />
-            <strong>Sua linha do tempo começa aqui.</strong>
+            <strong>{hasUndated ? 'Nenhum evento com data conhecida.' : 'Sua linha do tempo começa aqui.'}</strong>
             <span>
-              Os acontecimentos da família aparecerão ao longo deste eixo quando
-              forem cadastrados.
+              {hasUndated ? 'Veja os eventos sem data abaixo da linha do tempo.' : 'Os acontecimentos da família aparecerão ao longo deste eixo quando forem cadastrados.'}
             </span>
           </div>
         )}

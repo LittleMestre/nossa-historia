@@ -1,4 +1,5 @@
 export type TimelinePlacement = 'above' | 'below'
+export type MomentType = 'family' | 'individual' | 'other'
 
 export interface TimelineEvent {
   id: string
@@ -8,6 +9,10 @@ export interface TimelineEvent {
   month?: number | null
   day?: number | null
   category?: string | null
+  categoryId?: string | null
+  momentType?: MomentType
+  datePrecision?: 'day' | 'month' | 'year' | 'range'
+  endYear?: number | null
   coverUrl?: string | null
   placement?: TimelinePlacement | null
 }

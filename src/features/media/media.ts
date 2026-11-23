@@ -97,6 +97,30 @@ export const getSignedPhotoUrls = createServerFn({ method: 'POST' })
     return { urls }
   })
 
+export const getTimelineMosaicPhotos = createServerFn({ method: 'POST' })
+  .validator(z.object({ eventIds: z.array(z.uuid()).min(1).max(60) }))
+  .handler(async ({ data }) => {
+    const supabase = createSupabaseServerClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const { activeSpace } = await getSpaceState()
+    if (authError || !user || !activeSpace) throw new Error('Acesso às fotografias indisponível.')
+    const eventIds = [...new Set(data.eventIds)]
+    const { data: events, error: eventError } = await supabase.from('events')
+      .select('id').eq('space_id', activeSpace.id).is('deleted_at', null).in('id', eventIds)
+    if (eventError) throw new Error('Não foi possível verificar os eventos.')
+    const allowed = new Set(events.map((event) => event.id))
+    const { data: photos, error } = await supabase.rpc('timeline_mosaic_photos', {
+      target_event_ids: eventIds.filter((id) => allowed.has(id)),
+    })
+    if (error) throw new Error('Não foi possível carregar o mosaico.')
+    const byEvent: Record<string, string[]> = {}
+    for (const id of eventIds) byEvent[id] = []
+    for (const photo of photos) {
+      if (allowed.has(photo.event_id)) byEvent[photo.event_id].push(photo.media_id)
+    }
+    return byEvent
+  })
+
 const mediaAction = z.object({ mediaId: z.uuid() })
 const managementPage = z.object({ page: z.number().int().min(0).max(1000) })
 

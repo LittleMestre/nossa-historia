@@ -48,7 +48,8 @@ function partialDate(year: number | null, month: number | null, day: number | nu
   if (day === null) return `${months[month - 1]} de ${year}`
   return `${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}/${year}`
 }
-export function formatEventDate(event: Event) {
+export type EventDate = Pick<Event, 'date_precision' | 'start_year' | 'start_month' | 'start_day' | 'end_year' | 'end_month' | 'end_day' | 'approximate_date_label'>
+export function formatEventDate(event: EventDate) {
   const { date_precision: precision, start_year: year, start_month: month, start_day: day } = event
   const label = precision === 'range'
     ? `Entre ${partialDate(year, month, day)} e ${partialDate(event.end_year, event.end_month, event.end_day)}`
