@@ -1,10 +1,14 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { TimelineExperience } from '../components/timeline/TimelineExperience'
-import type { TimelineEvent } from '../components/timeline/timeline-model'
+import { getTimelineEvents } from '../features/events/timeline'
 
-export const Route = createFileRoute('/')({ component: HomePage })
-const events: TimelineEvent[] = []
+export const Route = createFileRoute('/')({
+  loader: () => getTimelineEvents(),
+  pendingComponent: () => <div className="inner-page" role="status">Carregando acontecimentos…</div>,
+  errorComponent: () => <div className="inner-page" role="alert">Não foi possível carregar os acontecimentos. Tente atualizar a página.</div>,
+  component: HomePage,
+})
 
 function HomePage() {
-  return <TimelineExperience events={events} view="spiral" />
+  return <TimelineExperience {...Route.useLoaderData()} view="spiral" />
 }

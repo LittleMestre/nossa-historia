@@ -8,7 +8,9 @@ A área usa rolagem horizontal nativa com alinhamento central e `scroll-snap`. B
 
 Durante uma centralização programática, o foco selecionado permanece estável; após a rolagem terminar, ele é sincronizado com o cartão efetivamente central. Isso evita oscilações de destaque ao atravessar cartões intermediários.
 
-A rota de detalhes `/eventos/:eventId` é um estado vazio nesta etapa. Quando a consulta Supabase existir, a rota deverá buscar o evento autorizado por ID e a pesquisa poderá centralizá-lo chamando a seleção por chave. A aplicação principal não envia fotografias reais nem dados fictícios.
+A home e `/linha-do-tempo` recebem eventos da mesma consulta Supabase SSR do espaço ativo. A consulta ignora eventos removidos e subeventos e percorre todas as páginas. Datas desconhecidas são listadas fora do eixo, com link para `/eventos/:eventId`. Os cartões com data usam a mesma rota de detalhes e exibem um mosaico automático das quatro primeiras fotos ativas do evento, ordenadas por `created_at` e `id`. Zero fotos mostra “Sem fotos”; uma ocupa toda a área; duas a dividem ao meio; três usam uma foto alta e duas menores; quatro usam grade 2×2. A pesquisa permanece para uma etapa futura.
+
+O servidor seleciona IDs por lotes de até 60 eventos com função SQL `SECURITY INVOKER`, sob RLS, e reaproveita `getSignedPhotoUrls` para as URLs privadas de 60 segundos. A espiral consulta a janela renderizada; a linha horizontal observa cartões próximos ao viewport. A renovação ocorre após 45 segundos e quando a aba volta a ficar visível. Não há URL pública, coluna de capa ou seleção manual. O Supabase local entrega o original quando a transformação privada de miniatura não está disponível; muitas fotos grandes ainda podem consumir largura de banda.
 
 ## Demonstração visual local
 

@@ -1,10 +1,12 @@
 import { Link } from '@tanstack/react-router'
-import { ArrowUpRight, CalendarDays, ImageIcon } from 'lucide-react'
+import { ArrowUpRight, CalendarDays } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { TimelineControls } from './TimelineControls'
 import { TimelineFocusIndicator } from './TimelineFocusIndicator'
 import { TimelineYearNavigator } from './TimelineYearNavigator'
 import { createTimelineItems } from './timeline-model'
+import { PhotoMosaic } from './PhotoMosaic'
+import { useTimelinePhotos } from './useTimelinePhotos'
 import type { TimelineEvent, TimelineItem } from './timeline-model'
 import {
   DESKTOP_SPIRAL,
@@ -17,6 +19,7 @@ import {
 
 interface SpiralTimelineViewProps {
   events: TimelineEvent[]
+  hasUndated?: boolean
   showDetailsLink?: boolean
 }
 
@@ -25,6 +28,7 @@ const precision = (value: number) => Number(value.toFixed(4))
 
 export function SpiralTimelineView({
   events,
+  hasUndated = false,
   showDetailsLink = true,
 }: SpiralTimelineViewProps) {
   const [today] = useState(() => new Date())
@@ -181,6 +185,9 @@ export function SpiralTimelineView({
   const visible = items
     .slice(start, end + 1)
     .map((item, k) => ({ item, index: start + k }))
+  const { photos, error: photoError } = useTimelinePhotos(
+    visible.flatMap(({ item }) => item.kind === 'event' ? [item.event.id] : []),
+  )
   // trilha da hélice (pontos discretos ao longo do caminho)
   const trail = useMemo(() => {
     const pts: { key: number; t: ReturnType<typeof spiralTransform> }[] = []
@@ -256,6 +263,8 @@ export function SpiralTimelineView({
                       focused={focused}
                       onSelect={() => select(item.key)}
                       showDetailsLink={showDetailsLink}
+                      photoUrls={photos[item.event.id]}
+                      photoError={photoError}
                     />
                   ) : (
                     <SpiralMarker
@@ -272,10 +281,9 @@ export function SpiralTimelineView({
         {events.length === 0 && (
           <div className="spiral-empty">
             <CalendarDays size={20} />
-            <strong>Sua história começa aqui.</strong>
+            <strong>{hasUndated ? 'Nenhum evento com data conhecida.' : 'Sua história começa aqui.'}</strong>
             <span>
-              As lembranças da família girarão nesta espiral quando forem
-              cadastradas.
+              {hasUndated ? 'Veja os eventos sem data abaixo da espiral.' : 'As lembranças da família girarão nesta espiral quando forem cadastradas.'}
             </span>
           </div>
         )}
@@ -302,11 +310,15 @@ function SpiralCard({
   focused,
   onSelect,
   showDetailsLink,
+  photoUrls,
+  photoError,
 }: {
   item: Extract<TimelineItem, { kind: 'event' }>
   focused: boolean
   onSelect: () => void
   showDetailsLink: boolean
+  photoUrls?: string[]
+  photoError: boolean
 }) {
   const { event } = item
   return (
@@ -319,14 +331,7 @@ function SpiralCard({
         aria-label={`Selecionar ${event.title}, ${event.dateLabel}`}
       >
         <span className="spiral-photo">
-          {event.coverUrl ? (
-            <img src={event.coverUrl} alt="" draggable={false} />
-          ) : (
-            <span className="cinema-photo-empty">
-              <ImageIcon size={30} strokeWidth={1.25} />
-              <span>Sem capa</span>
-            </span>
-          )}
+          <PhotoMosaic urls={photoUrls ?? (event.coverUrl ? [event.coverUrl] : undefined)} error={photoError} />
         </span>
         <span className="spiral-meta">
           <span className="spiral-date">{event.dateLabel}</span>

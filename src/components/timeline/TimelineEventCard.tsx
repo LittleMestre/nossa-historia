@@ -1,5 +1,6 @@
 import { Link } from '@tanstack/react-router'
-import { ArrowUpRight, ImageIcon } from 'lucide-react'
+import { ArrowUpRight } from 'lucide-react'
+import { PhotoMosaic } from './PhotoMosaic'
 import type { TimelineEvent, TimelinePlacement } from './timeline-model'
 
 interface TimelineEventCardProps {
@@ -9,6 +10,8 @@ interface TimelineEventCardProps {
   distance: number
   onSelect: () => void
   showDetailsLink?: boolean
+  photoUrls?: string[]
+  photoError?: boolean
 }
 
 export function TimelineEventCard({
@@ -18,6 +21,8 @@ export function TimelineEventCard({
   distance,
   onSelect,
   showDetailsLink = true,
+  photoUrls,
+  photoError,
 }: TimelineEventCardProps) {
   return (
     <div
@@ -33,14 +38,7 @@ export function TimelineEventCard({
         aria-label={`Selecionar ${event.title}, ${event.dateLabel}`}
       >
         <span className="cinema-photo">
-          {event.coverUrl ? (
-            <img src={event.coverUrl} alt="" loading="lazy" />
-          ) : (
-            <span className="cinema-photo-empty">
-              <ImageIcon size={30} strokeWidth={1.25} />
-              <span>Sem capa</span>
-            </span>
-          )}
+          <PhotoMosaic urls={photoUrls ?? (event.coverUrl ? [event.coverUrl] : undefined)} error={photoError} />
         </span>
         <span className="cinema-card-meta">
           <span className="cinema-card-date">{event.dateLabel}</span>

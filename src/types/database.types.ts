@@ -692,6 +692,10 @@ export type Database = {
         }[]
       }
       restore_media_photo: { Args: { target_id: string }; Returns: string }
+      timeline_mosaic_photos: {
+        Args: { target_event_ids: string[] }
+        Returns: { event_id: string; media_id: string }[]
+      }
     }
     Enums: {
       date_precision: 'day' | 'month' | 'year' | 'range' | 'unknown'
