@@ -7,7 +7,7 @@ import { confirmDemoAction, pickDemoPhotos } from '@/lib/demo-actions'
 import { eventDate } from '@/lib/model'
 export default function EventDetail() {
   const { id } = useLocalSearchParams<{ id: string }>()
-  const { data, active, user, demoActions, busy } = useApp()
+  const { data, active, actor, demoActions, busy } = useApp()
   const c = usePalette()
   const [picking, setPicking] = useState(false)
   const event = data.events.find((item) => item.id === id)
@@ -30,7 +30,7 @@ export default function EventDetail() {
     if (!demoActions) return
     confirmDemoAction(
       'Excluir acontecimento?',
-      'O acontecimento e suas fotos serão removidos da demonstração.',
+      'O acontecimento e suas fotos serão ocultados nesta família.',
       'Excluir',
       async () => {
         await demoActions.deleteEvent(id)
@@ -72,29 +72,35 @@ export default function EventDetail() {
           {eventDate(event)}
         </Text>
         <Text style={{ color: c.muted, marginTop: 8 }}>
-          {data.categories[event.category_id ?? ''] ?? 'Momento especial'}
+          {
+            { family: 'Familiar', individual: 'Individual', other: 'Outro' }[
+              event.moment_type
+            ]
+          }{' '}
+          · {data.categories[event.category_id ?? ''] ?? 'Sem categoria'}
         </Text>
         <Text
           style={{ color: c.ink, fontSize: 16, lineHeight: 25, marginTop: 22 }}
         >
+          {event.location ? event.location + '\n' : ''}
           {event.description || 'Nenhuma descrição foi adicionada.'}
         </Text>
-        {(active?.role === 'admin' ||
-          (active?.role === 'contributor' &&
-            event.created_by === user?.id)) && (
-          <Button
-            title="Editar acontecimento"
-            outline
-            disabled={!!demoActions && (busy || picking)}
-            onPress={() =>
-              router.push({
-                pathname: '/editor',
-                params: { kind: 'event', id: event.id },
-              })
-            }
-          />
-        )}
-        {demoActions && (
+        {demoActions &&
+          (active?.role === 'admin' ||
+            (active?.role === 'contributor' && event.created_by === actor)) && (
+            <Button
+              title="Editar acontecimento"
+              outline
+              disabled={!!demoActions && (busy || picking)}
+              onPress={() =>
+                router.push({
+                  pathname: '/editor',
+                  params: { kind: 'event', id: event.id },
+                })
+              }
+            />
+          )}
+        {demoActions && active?.role !== 'viewer' && (
           <Button
             title={
               picking ? 'Selecionando fotografias…' : 'Adicionar fotografias'
@@ -104,7 +110,7 @@ export default function EventDetail() {
             onPress={() => void addPhotos()}
           />
         )}
-        <PhotoGrid photos={photos} max={60} />
+        <PhotoGrid photos={photos} max={photos.length} />
       </View>
       <Text
         style={{
@@ -137,14 +143,16 @@ export default function EventDetail() {
       ) : (
         <Text style={{ color: c.muted }}>Nenhuma pessoa vinculada.</Text>
       )}
-      {demoActions && (
-        <Button
-          title="Excluir acontecimento"
-          outline
-          disabled={busy || picking}
-          onPress={deleteEvent}
-        />
-      )}
+      {demoActions &&
+        (active?.role === 'admin' ||
+          (active?.role === 'contributor' && event.created_by === actor)) && (
+          <Button
+            title="Excluir acontecimento"
+            outline
+            disabled={busy || picking}
+            onPress={deleteEvent}
+          />
+        )}
     </Screen>
   )
 }

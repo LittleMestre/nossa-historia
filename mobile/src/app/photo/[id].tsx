@@ -1,5 +1,8 @@
 import { router, useLocalSearchParams } from 'expo-router'
-import { Text, View, useWindowDimensions } from 'react-native'
+import { useState } from 'react'
+import { LocalField } from '@/components/LocalField'
+import { canChange } from '@/lib/local-repository'
+import { Alert, Text, View, useWindowDimensions } from 'react-native'
 import { Screen, Button, usePalette } from '@/components/ui'
 import { Chip } from '@/components/Stage'
 import { Picture } from '@/components/Photo'
@@ -7,13 +10,15 @@ import { useApp } from '@/lib/app-context'
 import { confirmDemoAction } from '@/lib/demo-actions'
 export default function Photo() {
   const { id } = useLocalSearchParams<{ id: string }>(),
-    { data, demoActions, busy } = useApp(),
+    { data, demoActions, busy, active } = useApp(),
     c = usePalette(),
     { height } = useWindowDimensions()
   const i = data.photos.findIndex((p) => p.id === id),
     p = data.photos[i],
     event = data.events.find((e) => e.id === p?.event_id)
+  const [caption, setCaption] = useState<string | null>(null)
   function move(delta: number) {
+    setCaption(null)
     router.setParams({ id: data.photos[i + delta].id })
   }
   function goBack() {
@@ -24,7 +29,7 @@ export default function Photo() {
     if (!demoActions) return
     confirmDemoAction(
       'Excluir fotografia?',
-      'A cópia da demonstração será removida da galeria e do acontecimento.',
+      'A foto irá para a lixeira desta família.',
       'Excluir',
       async () => {
         await demoActions.deletePhoto(id)
@@ -65,13 +70,35 @@ export default function Photo() {
               onPress={() => router.push(`/event/${event.id}`)}
             />
           )}
-          {demoActions && (
-            <Button
-              title="Excluir fotografia"
-              outline
-              disabled={busy}
-              onPress={deletePhoto}
-            />
+          {demoActions && active && canChange(active.role, p.created_by) && (
+            <>
+              <LocalField
+                label="Descrição da foto"
+                value={caption ?? p.description ?? ''}
+                onChangeText={setCaption}
+                maxLength={2000}
+              />
+              <Button
+                outline
+                disabled={busy || caption === null}
+                title="Salvar descrição"
+                onPress={() =>
+                  void demoActions
+                    .editPhoto(id, caption ?? '')
+                    .then(() => {
+                      setCaption(null)
+                      Alert.alert('Descrição salva')
+                    })
+                    .catch((e) => Alert.alert('Falha ao salvar', e.message))
+                }
+              />
+              <Button
+                title="Excluir fotografia"
+                outline
+                disabled={busy}
+                onPress={deletePhoto}
+              />
+            </>
           )}
         </>
       )}

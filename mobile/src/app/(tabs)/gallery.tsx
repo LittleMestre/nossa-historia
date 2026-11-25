@@ -1,10 +1,11 @@
-import { Text, View, Pressable, ActivityIndicator } from 'react-native'
+import { Alert, Text, View, Pressable, ActivityIndicator } from 'react-native'
 import { router } from 'expo-router'
 import { useApp } from '@/lib/app-context'
 import { Screen, Empty, Button, usePalette } from '@/components/ui'
 import { Picture } from '@/components/Photo'
 export default function Gallery() {
-  const { data, busy, error, refresh, active, demo } = useApp(),
+  const { data, busy, error, refresh, active, demo, demoActions, trash } =
+      useApp(),
     c = usePalette()
   return (
     <Screen title="Galeria">
@@ -41,6 +42,31 @@ export default function Gallery() {
           title="Álbum vazio"
           detail="As fotografias deste espaço aparecerão aqui."
         />
+      )}
+      {demoActions && active?.role === 'admin' && trash.length > 0 && (
+        <View style={{ marginTop: 24 }}>
+          <Text style={{ color: c.ink, fontSize: 20 }}>
+            Lixeira de fotografias
+          </Text>
+          {trash.map((photo) => (
+            <Button
+              outline
+              disabled={busy}
+              key={photo.id}
+              title={
+                'Restaurar · ' +
+                (photo.description ||
+                  data.events.find((e) => e.id === photo.event_id)?.title ||
+                  'Fotografia')
+              }
+              onPress={() =>
+                void demoActions
+                  .restorePhoto(photo.id)
+                  .catch((e) => Alert.alert('Falha ao restaurar', e.message))
+              }
+            />
+          ))}
+        </View>
       )}
       {!demo && active?.role === 'admin' && (
         <View style={{ marginTop: 24 }}>

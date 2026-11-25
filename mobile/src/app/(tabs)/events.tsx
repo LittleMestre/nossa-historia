@@ -7,7 +7,7 @@ export default function Events() {
   const c = usePalette()
   return (
     <Screen title="Acontecimentos" eyebrow="TODAS AS HISTÓRIAS">
-      {active?.role !== 'viewer' && (
+      {demo && active && active.role !== 'viewer' && (
         <Button
           title="Criar acontecimento"
           disabled={demo && busy}

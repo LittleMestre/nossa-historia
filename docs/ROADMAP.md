@@ -17,6 +17,7 @@
 - [ ] Etapa 5C: filtros combinados por ano, categoria e tipo de momento implementados; aguardando validação manual.
 - [ ] Etapa 5: aguarda validação manual da 5B e 5C.
 - [ ] Etapa 6: aplicativo mobile. As etapas 6A e 6B foram validadas no iPhone. A 6C confirma a identidade com Supabase Auth após o login e documenta o proxy HTTPS restrito na rede doméstica. Aguardando validação no iPhone de login, sessão, espaços, eventos, pessoas, fotos privadas e troca de conta.
+- [ ] **Mobile local para apresentação**. Implementados perfil e famílias no dispositivo, exemplos isolados com restauração, migração da demonstração anterior, CRUD de eventos com precisão temporal, participantes, pessoas e fotos persistentes com lixeira. Espiral e timeline consomem o mesmo estado e mantêm os filtros combinados. O login e a leitura Supabase pertencem à 6C. O modo local não envia convites nem sincroniza histórias. A reabertura do SQLite e as regras de domínio foram verificadas no computador. Os cenários A–F aguardam ensaio no iPhone. [Instruções e roteiro](../mobile/README.md)
 - [ ] Etapa 7: busca textual e estruturada com paginação.
 - [ ] Etapa 8: comentários, lembranças, subeventos e moderação auditada.
 - [ ] Etapa 9: testes finais, acessibilidade, desempenho e publicação.

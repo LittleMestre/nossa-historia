@@ -22,7 +22,7 @@ export function Screen({
   const c = usePalette()
   const inset = useSafeAreaInsets()
   const path = usePathname()
-  const { demo, user, active, error } = useApp()
+  const { demo, examples, user, active, error } = useApp()
   const content = (
     <View
       style={{
@@ -84,7 +84,8 @@ export function Screen({
       )}
       {demo && (
         <Text style={{ color: c.muted, fontSize: 12, marginBottom: 12 }}>
-          Modo demonstração — dados salvos neste aparelho
+          {examples ? 'Exemplos fictícios' : 'História local'} · salvo neste
+          aparelho
         </Text>
       )}
       {!!error && <Banner>{error}</Banner>}
@@ -95,6 +96,7 @@ export function Screen({
     <View style={{ flex: 1, backgroundColor: c.bg, paddingTop: inset.top }}>
       {scroll ? (
         <ScrollView
+          automaticallyAdjustKeyboardInsets
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ flexGrow: 1 }}
           showsVerticalScrollIndicator={false}

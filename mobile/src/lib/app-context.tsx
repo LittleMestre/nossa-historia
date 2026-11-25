@@ -11,10 +11,10 @@ import { AppState } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import type { User } from '@supabase/supabase-js'
 import { supabase, authStorageKey } from './supabase'
-import { demoSpace } from './demo'
+import { actorId, type Identity } from './local-repository'
 import { useDemoData } from './demo-storage'
 import { loadSpaces, loadData, signPhotos } from './data'
-import type { Data, Space } from './model'
+import type { Data, Space, Photo } from './model'
 const empty: Data = {
   events: [],
   people: [],
@@ -31,7 +31,11 @@ type State = {
   data: Data
   busy: boolean
   error: string | null
-  enterDemo: () => void
+  enterDemo: (examples: boolean) => Promise<void>
+  actor: string | undefined
+  identity: Identity | null
+  trash: Photo[]
+  examples: boolean
   login: (email: string, password: string) => Promise<void>
   logout: () => Promise<void>
   selectSpace: (s: Space) => Promise<void>
@@ -115,6 +119,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }
   async function logout() {
+    if (demo) localDemo.leave()
     if (authAction.current) return
     authAction.current = true
     authRevision.current++
@@ -134,9 +139,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setSigning(false)
     }
   }
-  function enterDemo() {
+  async function enterDemo(examples: boolean) {
     authRevision.current++
-    void localDemo.load()
+    await localDemo.open(examples)
     setDemo(true)
   }
   return (
@@ -163,8 +168,8 @@ function SpaceProvider({
   signing: boolean
   localDemo: ReturnType<typeof useDemoData>
 }) {
-  const [spaces, setSpaces] = useState<Space[]>(demo ? [demoSpace] : []),
-    [active, setActive] = useState<Space | null>(demo ? demoSpace : null)
+  const [spaces, setSpaces] = useState<Space[]>([]),
+    [active, setActive] = useState<Space | null>(null)
   const [loadedSpace, setLoadedSpace] = useState<{
     id: string
     data: Data
@@ -255,14 +260,22 @@ function SpaceProvider({
         demo,
         demoActions: localDemo.actions,
         data: (demo ? localDemo.data : spaceData) ?? empty,
-        active,
-        spaces,
+        active: demo ? localDemo.active : active,
+        spaces: demo ? localDemo.spaces : spaces,
+        actor: demo ? actorId(localDemo.selection.role) : user?.id,
+        identity: demo ? localDemo.identity : null,
+        examples: demo && localDemo.selection.examples,
+        trash: demo ? localDemo.trash : [],
         busy: demo ? localDemo.busy : busy || signing,
         error: demo ? localDemo.error : error,
         login,
         logout,
         enterDemo,
-        selectSpace,
+        selectSpace: demo
+          ? async (s) => {
+              await localDemo.actions?.select(s.id)
+            }
+          : selectSpace,
         refresh: demo ? localDemo.load : refresh,
       }}
     >

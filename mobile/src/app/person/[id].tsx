@@ -4,7 +4,7 @@ import { useApp } from '@/lib/app-context'
 import { Screen, EventCard, Button, usePalette } from '@/components/ui'
 export default function Person() {
   const { id } = useLocalSearchParams<{ id: string }>(),
-    { data, active, user } = useApp(),
+    { data, active, actor, demoActions } = useApp(),
     c = usePalette()
   const person = data.people.find((p) => p.id === id),
     events = data.events.filter((e) =>
@@ -19,20 +19,21 @@ export default function Person() {
               .filter(Boolean)
               .join(' · ') || 'Sem descrição.'}
           </Text>
-          {(active?.role === 'admin' ||
-            (active?.role === 'contributor' &&
-              person.created_by === user?.id)) && (
-            <Button
-              title="Editar pessoa"
-              outline
-              onPress={() =>
-                router.push({
-                  pathname: '/editor',
-                  params: { kind: 'person', id },
-                })
-              }
-            />
-          )}
+          {demoActions &&
+            (active?.role === 'admin' ||
+              (active?.role === 'contributor' &&
+                person.created_by === actor)) && (
+              <Button
+                title="Editar pessoa"
+                outline
+                onPress={() =>
+                  router.push({
+                    pathname: '/editor',
+                    params: { kind: 'person', id },
+                  })
+                }
+              />
+            )}
           <Text style={{ color: c.ink, fontSize: 20, marginVertical: 16 }}>
             Participação em eventos
           </Text>

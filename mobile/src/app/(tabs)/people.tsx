@@ -7,7 +7,7 @@ export default function People() {
     c = usePalette()
   return (
     <Screen title="Pessoas">
-      {active?.role !== 'viewer' && (
+      {demo && active && active.role !== 'viewer' && (
         <Button
           title="Cadastrar pessoa"
           disabled={demo && busy}

@@ -50,7 +50,7 @@ function parseParts(input: string) {
   const year = Number(yearText)
   const month = monthText ? Number(monthText) : null
   const day = dayText ? Number(dayText) : null
-  if (year < 1 || (month !== null && (month < 1 || month > 12))) {
+  if (year < 1000 || (month !== null && (month < 1 || month > 12))) {
     throw Error('Informe um ano e um mês válidos.')
   }
   if (month !== null && day !== null) {
