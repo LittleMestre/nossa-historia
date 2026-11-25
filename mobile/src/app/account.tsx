@@ -1,15 +1,28 @@
-import { Text } from 'react-native'
+import { Alert, Text } from 'react-native'
 import { router } from 'expo-router'
 import { Screen, Button, usePalette } from '@/components/ui'
 import { useTheme } from '@/lib/theme'
 import { useApp } from '@/lib/app-context'
+import { confirmDemoAction } from '@/lib/demo-actions'
 export default function Account() {
-  const { user, demo, logout, refresh, active } = useApp()
+  const { user, demo, demoActions, busy, logout, refresh, active } = useApp()
   const c = usePalette()
   const { theme, choose } = useTheme()
   async function leave(login: boolean) {
     await logout()
     router.replace(login ? '/login' : '/')
+  }
+  function restoreDemo() {
+    if (!demoActions) return
+    confirmDemoAction(
+      'Restaurar demonstração?',
+      'Os dados originais voltarão e suas alterações e fotos adicionadas serão removidas deste aparelho.',
+      'Restaurar',
+      async () => {
+        await demoActions.restore()
+        Alert.alert('Demonstração restaurada')
+      },
+    )
   }
   return (
     <Screen title="Sua conta">
@@ -18,6 +31,14 @@ export default function Account() {
       </Text>
       {demo && (
         <Text style={{ color: c.muted }}>Papel simulado de administrador</Text>
+      )}
+      {demoActions && (
+        <Button
+          title="Restaurar demonstração"
+          outline
+          disabled={busy}
+          onPress={restoreDemo}
+        />
       )}
       <Button
         outline

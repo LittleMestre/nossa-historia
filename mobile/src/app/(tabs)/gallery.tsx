@@ -4,7 +4,7 @@ import { useApp } from '@/lib/app-context'
 import { Screen, Empty, Button, usePalette } from '@/components/ui'
 import { Picture } from '@/components/Photo'
 export default function Gallery() {
-  const { data, busy, error, refresh, active } = useApp(),
+  const { data, busy, error, refresh, active, demo } = useApp(),
     c = usePalette()
   return (
     <Screen title="Galeria">
@@ -42,7 +42,7 @@ export default function Gallery() {
           detail="As fotografias deste espaço aparecerão aqui."
         />
       )}
-      {active?.role === 'admin' && (
+      {!demo && active?.role === 'admin' && (
         <View style={{ marginTop: 24 }}>
           <Text style={{ color: c.ink, fontSize: 20 }}>
             Gerenciar fotografias

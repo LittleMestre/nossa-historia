@@ -11,7 +11,8 @@ import { AppState } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import type { User } from '@supabase/supabase-js'
 import { supabase, authStorageKey } from './supabase'
-import { demoData, demoSpace } from './demo'
+import { demoSpace } from './demo'
+import { useDemoData } from './demo-storage'
 import { loadSpaces, loadData, signPhotos } from './data'
 import type { Data, Space } from './model'
 const empty: Data = {
@@ -23,6 +24,7 @@ const empty: Data = {
 }
 type State = {
   demo: boolean
+  demoActions: ReturnType<typeof useDemoData>['actions']
   user: User | null
   spaces: Space[]
   active: Space | null
@@ -45,8 +47,10 @@ export function useApp() {
 export function AppProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null),
     [demo, setDemo] = useState(false),
-    [signing, setSigning] = useState(false)
+    [signing, setSigning] = useState(!!supabase)
   const authRevision = useRef(0)
+  const authAction = useRef(false)
+  const localDemo = useDemoData(demo)
   useEffect(() => {
     if (!supabase) return
     let mounted = true
@@ -58,6 +62,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
           setUser(data.user)
       })
       .catch(() => {})
+      .finally(() => {
+        if (mounted && !authAction.current) setSigning(false)
+      })
     const { data } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_OUT') {
         authRevision.current++
@@ -74,10 +81,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       throw Error(
         'O servidor de acesso não está configurado neste aparelho. Você pode explorar a demonstração.',
       )
+    if (authAction.current) return
+    authAction.current = true
     const revision = ++authRevision.current
     setSigning(true)
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
       })
@@ -87,32 +96,54 @@ export function AppProvider({ children }: { children: ReactNode }) {
             ? 'E-mail ou senha inválidos.'
             : 'Servidor indisponível. Confira a conexão.',
         )
-      if (revision === authRevision.current) setUser(data.user)
+      const { data, error: verificationError } = await supabase.auth.getUser()
+      if (verificationError || !data.user) {
+        await supabase.auth.signOut({ scope: 'local' })
+        throw Error(
+          'Não foi possível confirmar sua conta. Confira a conexão e tente novamente.',
+        )
+      }
+      if (revision === authRevision.current) {
+        setDemo(false)
+        setUser(data.user)
+      } else {
+        await supabase.auth.signOut({ scope: 'local' })
+      }
     } finally {
+      authAction.current = false
       setSigning(false)
     }
   }
   async function logout() {
+    if (authAction.current) return
+    authAction.current = true
     authRevision.current++
-    if (user && supabase) {
-      // Keep the account visible until local session cleanup succeeds.
-      try {
-        await supabase.auth.signOut({ scope: 'local' })
-      } finally {
-        await AsyncStorage.removeItem(authStorageKey)
-        setUser(null)
+    setSigning(true)
+    try {
+      if (!demo && user && supabase) {
+        try {
+          await supabase.auth.signOut({ scope: 'local' })
+        } finally {
+          await AsyncStorage.removeItem(authStorageKey)
+        }
       }
+    } finally {
+      setUser(null)
+      setDemo(false)
+      authAction.current = false
+      setSigning(false)
     }
-    setDemo(false)
   }
   function enterDemo() {
     authRevision.current++
+    void localDemo.load()
     setDemo(true)
   }
   return (
     <SpaceProvider
-      key={user?.id ?? (demo ? 'demo' : 'guest')}
-      {...{ user, demo, login, logout, enterDemo, signing }}
+      key={demo ? 'demo' : (user?.id ?? 'guest')}
+      user={demo ? null : user}
+      {...{ demo, localDemo, login, logout, enterDemo, signing }}
     >
       {children}
     </SpaceProvider>
@@ -121,6 +152,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 function SpaceProvider({
   user,
   demo,
+  localDemo,
   login,
   logout,
   enterDemo,
@@ -129,11 +161,15 @@ function SpaceProvider({
 }: Pick<State, 'user' | 'demo' | 'login' | 'logout' | 'enterDemo'> & {
   children: ReactNode
   signing: boolean
+  localDemo: ReturnType<typeof useDemoData>
 }) {
   const [spaces, setSpaces] = useState<Space[]>(demo ? [demoSpace] : []),
     [active, setActive] = useState<Space | null>(demo ? demoSpace : null)
-  const [data, setData] = useState<Data>(demo ? demoData : empty),
-    [busy, setBusy] = useState(!!user),
+  const [loadedSpace, setLoadedSpace] = useState<{
+    id: string
+    data: Data
+  } | null>(null)
+  const [busy, setBusy] = useState(!!user),
     [error, setError] = useState<string | null>(null),
     [revision, reload] = useState(0)
   useEffect(() => {
@@ -162,6 +198,7 @@ function SpaceProvider({
   }, [user, revision])
   useEffect(() => {
     if (!active || !user) return
+    const spaceId = active.id
     let live = true
     let timer: ReturnType<typeof setTimeout> | undefined
     let round = 0
@@ -169,15 +206,15 @@ function SpaceProvider({
       const ticket = ++round
       clearTimeout(timer)
       try {
-        const loaded = await loadData(active!.id)
+        const loaded = await loadData(spaceId)
         const photos = await signPhotos(loaded.photos)
         if (live && ticket === round) {
-          setData({ ...loaded, photos })
+          setLoadedSpace({ id: spaceId, data: { ...loaded, photos } })
           setError(null)
         }
       } catch {
         if (live && ticket === round) {
-          setData(empty)
+          setLoadedSpace(null)
           setError(
             'O espaço não pôde ser carregado. Confira a conexão e atualize.',
           )
@@ -205,26 +242,28 @@ function SpaceProvider({
   async function selectSpace(s: Space) {
     const found = spaces.find((row) => row.id === s.id)
     if (found && active?.id !== found.id) {
-      setData(empty)
+      setLoadedSpace(null)
       setBusy(true)
       setActive(found)
     }
   }
+  const spaceData = loadedSpace?.id === active?.id ? loadedSpace?.data : null
   return (
     <Context.Provider
       value={{
         user,
         demo,
-        data,
+        demoActions: localDemo.actions,
+        data: (demo ? localDemo.data : spaceData) ?? empty,
         active,
         spaces,
-        busy: busy || signing,
-        error,
+        busy: demo ? localDemo.busy : busy || signing,
+        error: demo ? localDemo.error : error,
         login,
         logout,
         enterDemo,
         selectSpace,
-        refresh,
+        refresh: demo ? localDemo.load : refresh,
       }}
     >
       {children}

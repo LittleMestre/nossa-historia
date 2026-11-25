@@ -3,18 +3,22 @@ import { useState } from 'react'
 import { View, Text, TextInput } from 'react-native'
 import { Screen, Button, usePalette } from '@/components/ui'
 import { useApp } from '@/lib/app-context'
-import { eventDate } from '@/lib/model'
+import { demoDateInput } from '@/lib/demo-date'
+import { eventDate, type Event, type Person } from '@/lib/model'
+
+function closeEditor() {
+  if (router.canGoBack()) router.back()
+  else router.replace('/events')
+}
+
 export default function Editor() {
-  const { kind, id } = useLocalSearchParams<{ kind: string; id?: string }>(),
-    { data, active, user } = useApp(),
-    person = kind === 'person',
-    c = usePalette()
-  const e = data.events.find((x) => x.id === id),
-    p = data.people.find((x) => x.id === id),
-    record = person ? p : e
-  const [name, setName] = useState(person ? p?.name : e?.title),
-    [detail, setDetail] = useState(record?.description ?? ''),
-    [date, setDate] = useState(e ? eventDate(e) : '')
+  const { kind, id } = useLocalSearchParams<{ kind: string; id?: string }>()
+  const { data, active, user } = useApp()
+  const person = kind === 'person'
+  const c = usePalette()
+  const event = data.events.find((item) => item.id === id)
+  const personRecord = data.people.find((item) => item.id === id)
+  const record = person ? personRecord : event
   const allowed =
     !!active &&
     active.role !== 'viewer' &&
@@ -27,63 +31,129 @@ export default function Editor() {
       }
     >
       {allowed ? (
-        <View style={{ gap: 10 }}>
-          <Text style={{ color: c.muted }}>
-            Prévia do formulário. As alterações ficam apenas nesta tela e são
-            descartadas ao sair.
-          </Text>
-          {[
-            {
-              label: person ? 'Nome' : 'Título',
-              value: name ?? '',
-              change: setName,
-            },
-            ...(!person
-              ? [
-                  {
-                    label:
-                      'Data original (completa, parcial, intervalo ou desconhecida)',
-                    value: date,
-                    change: setDate,
-                  },
-                ]
-              : []),
-            { label: 'Descrição', value: detail, change: setDetail },
-          ].map((f) => (
-            <View key={f.label}>
-              <Text style={{ color: c.ink, marginVertical: 6 }}>{f.label}</Text>
-              <TextInput
-                accessibilityLabel={f.label}
-                multiline={f.label === 'Descrição'}
-                value={f.value}
-                onChangeText={f.change}
-                style={{
-                  backgroundColor: c.card,
-                  borderColor: c.border,
-                  borderWidth: 1,
-                  borderRadius: 12,
-                  padding: 13,
-                  color: c.ink,
-                }}
-              />
-            </View>
-          ))}
-          <Text style={{ color: c.muted }}>
-            Salvamento indisponível nesta versão.
-          </Text>
-        </View>
+        <EditorForm
+          key={`${kind}-${id ?? 'new'}`}
+          {...{ id, person, event, personRecord }}
+        />
       ) : (
-        <Text style={{ color: c.ink }}>
-          Edição indisponível para esta conta.
+        <>
+          <Text style={{ color: c.ink }}>
+            Edição indisponível para esta conta.
+          </Text>
+          <Button title="Fechar" outline onPress={closeEditor} />
+        </>
+      )}
+    </Screen>
+  )
+}
+
+function EditorForm({
+  id,
+  person,
+  event,
+  personRecord,
+}: {
+  id?: string
+  person: boolean
+  event?: Event
+  personRecord?: Person
+}) {
+  const { demoActions, busy } = useApp()
+  const c = usePalette()
+  const record = person ? personRecord : event
+  const [name, setName] = useState(
+    (person ? personRecord?.name : event?.title) ?? '',
+  )
+  const [description, setDescription] = useState(record?.description ?? '')
+  const [date, setDate] = useState(() =>
+    demoActions && !person
+      ? demoDateInput(event)
+      : event
+        ? eventDate(event)
+        : '',
+  )
+  const [error, setError] = useState('')
+
+  async function save() {
+    if (!demoActions || busy) return
+    setError('')
+    try {
+      const recordId = person
+        ? await demoActions.savePerson(id, { name, description })
+        : await demoActions.saveEvent(id, { title: name, description, date })
+      if (id && router.canGoBack()) router.back()
+      else if (person)
+        router.replace({ pathname: '/person/[id]', params: { id: recordId } })
+      else router.replace({ pathname: '/event/[id]', params: { id: recordId } })
+    } catch (cause) {
+      setError(
+        cause instanceof Error ? cause.message : 'Não foi possível salvar.',
+      )
+    }
+  }
+
+  return (
+    <View style={{ gap: 10 }}>
+      {!demoActions && (
+        <Text style={{ color: c.muted }}>
+          Prévia do formulário. As alterações ficam apenas nesta tela e são
+          descartadas ao sair.
+        </Text>
+      )}
+      {[
+        { label: person ? 'Nome' : 'Título', value: name, change: setName },
+        ...(!person
+          ? [{ label: 'Data original', value: date, change: setDate }]
+          : []),
+        { label: 'Descrição', value: description, change: setDescription },
+      ].map((field) => (
+        <View key={field.label}>
+          <Text style={{ color: c.ink, marginVertical: 6 }}>{field.label}</Text>
+          <TextInput
+            accessibilityLabel={field.label}
+            editable={!demoActions || !busy}
+            multiline={field.label === 'Descrição'}
+            value={field.value}
+            onChangeText={field.change}
+            style={{
+              backgroundColor: c.card,
+              borderColor: c.border,
+              borderWidth: 1,
+              borderRadius: 12,
+              padding: 13,
+              color: c.ink,
+            }}
+          />
+          {demoActions && field.label === 'Data original' && (
+            <Text style={{ color: c.muted, marginTop: 6 }}>
+              DD/MM/AAAA, MM/AAAA, AAAA ou 1998 a 2001. Deixe em branco se a
+              data é desconhecida.
+            </Text>
+          )}
+        </View>
+      ))}
+      {error ? (
+        <Text accessibilityRole="alert" style={{ color: c.warm }}>
+          {error}
+        </Text>
+      ) : null}
+      {demoActions ? (
+        <Button
+          title={busy ? 'Salvando…' : 'Salvar'}
+          disabled={busy}
+          onPress={() => void save()}
+        />
+      ) : (
+        <Text style={{ color: c.muted }}>
+          Salvamento indisponível nesta versão.
         </Text>
       )}
       <Button
-        title="Fechar"
+        title={demoActions ? 'Cancelar' : 'Fechar'}
+        disabled={!!demoActions && busy}
         outline
-        onPress={() =>
-          router.canGoBack() ? router.back() : router.replace('/events')
-        }
+        onPress={closeEditor}
       />
-    </Screen>
+    </View>
   )
 }

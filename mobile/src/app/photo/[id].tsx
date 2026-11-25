@@ -4,9 +4,10 @@ import { Screen, Button, usePalette } from '@/components/ui'
 import { Chip } from '@/components/Stage'
 import { Picture } from '@/components/Photo'
 import { useApp } from '@/lib/app-context'
+import { confirmDemoAction } from '@/lib/demo-actions'
 export default function Photo() {
   const { id } = useLocalSearchParams<{ id: string }>(),
-    { data } = useApp(),
+    { data, demoActions, busy } = useApp(),
     c = usePalette(),
     { height } = useWindowDimensions()
   const i = data.photos.findIndex((p) => p.id === id),
@@ -14,6 +15,22 @@ export default function Photo() {
     event = data.events.find((e) => e.id === p?.event_id)
   function move(delta: number) {
     router.setParams({ id: data.photos[i + delta].id })
+  }
+  function goBack() {
+    if (router.canGoBack()) router.back()
+    else router.replace('/gallery')
+  }
+  function deletePhoto() {
+    if (!demoActions) return
+    confirmDemoAction(
+      'Excluir fotografia?',
+      'A cópia da demonstração será removida da galeria e do acontecimento.',
+      'Excluir',
+      async () => {
+        await demoActions.deletePhoto(id)
+        goBack()
+      },
+    )
   }
   return (
     <Screen title={event?.title ?? 'Fotografia'}>
@@ -30,7 +47,8 @@ export default function Photo() {
             <Picture key={p.id} photo={p} contain />
           </View>
           <Text style={{ color: c.ink, marginVertical: 12 }}>
-            {i + 1} / {data.photos.length} · {p.description}
+            {i + 1} / {data.photos.length}
+            {p.description ? ` · ${p.description}` : ''}
           </Text>
           <View style={{ flexDirection: 'row', gap: 8 }}>
             <Chip label="‹ Anterior" disabled={!i} onPress={() => move(-1)} />
@@ -47,15 +65,17 @@ export default function Photo() {
               onPress={() => router.push(`/event/${event.id}`)}
             />
           )}
+          {demoActions && (
+            <Button
+              title="Excluir fotografia"
+              outline
+              disabled={busy}
+              onPress={deletePhoto}
+            />
+          )}
         </>
       )}
-      <Button
-        title="Voltar"
-        outline
-        onPress={() =>
-          router.canGoBack() ? router.back() : router.replace('/gallery')
-        }
-      />
+      <Button title="Voltar" outline onPress={goBack} />
     </Screen>
   )
 }

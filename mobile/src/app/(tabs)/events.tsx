@@ -3,13 +3,14 @@ import { router } from 'expo-router'
 import { Button, Empty, EventCard, Screen, usePalette } from '@/components/ui'
 import { useApp } from '@/lib/app-context'
 export default function Events() {
-  const { data, busy, active } = useApp()
+  const { data, busy, active, demo } = useApp()
   const c = usePalette()
   return (
     <Screen title="Acontecimentos" eyebrow="TODAS AS HISTÓRIAS">
       {active?.role !== 'viewer' && (
         <Button
           title="Criar acontecimento"
+          disabled={demo && busy}
           onPress={() => router.push('/editor?kind=event')}
         />
       )}

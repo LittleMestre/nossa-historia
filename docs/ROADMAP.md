@@ -16,7 +16,7 @@
 - [ ] Etapa 5B: mosaico automático de até quatro fotografias e upload opcional ao criar evento implementados; aguardando validação manual.
 - [ ] Etapa 5C: filtros combinados por ano, categoria e tipo de momento implementados; aguardando validação manual.
 - [ ] Etapa 5: aguarda validação manual da 5B e 5C.
-- [ ] Etapa 6: aplicativo mobile. A 6A abriu no Expo Go em iPhone físico. A 6B implementa entrada explícita na demonstração, cinco abas, espiral nativa, eixo horizontal, filtros, mosaicos, pessoas e tema persistente. Formulários são prévias sem gravação. Aguardando validação da 6B no aparelho e validação posterior de Auth e Storage na rede do dispositivo.
+- [ ] Etapa 6: aplicativo mobile. As etapas 6A e 6B foram validadas no iPhone. A 6C confirma a identidade com Supabase Auth após o login e documenta o proxy HTTPS restrito na rede doméstica. Aguardando validação no iPhone de login, sessão, espaços, eventos, pessoas, fotos privadas e troca de conta.
 - [ ] Etapa 7: busca textual e estruturada com paginação.
 - [ ] Etapa 8: comentários, lembranças, subeventos e moderação auditada.
 - [ ] Etapa 9: testes finais, acessibilidade, desempenho e publicação.
