@@ -22,7 +22,7 @@ export function Screen({
   const c = usePalette()
   const inset = useSafeAreaInsets()
   const path = usePathname()
-  const { demo, user, active, error } = useApp()
+  const { demo, examples, user, active, error } = useApp()
   const content = (
     <View
       style={{
@@ -84,7 +84,8 @@ export function Screen({
       )}
       {demo && (
         <Text style={{ color: c.muted, fontSize: 12, marginBottom: 12 }}>
-          Demonstração · dados fictícios
+          {examples ? 'Exemplos fictícios' : 'História local'} · salvo neste
+          aparelho
         </Text>
       )}
       {!!error && <Banner>{error}</Banner>}
@@ -95,6 +96,7 @@ export function Screen({
     <View style={{ flex: 1, backgroundColor: c.bg, paddingTop: inset.top }}>
       {scroll ? (
         <ScrollView
+          automaticallyAdjustKeyboardInsets
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ flexGrow: 1 }}
           showsVerticalScrollIndicator={false}
@@ -175,16 +177,21 @@ export function Button({
   onPress,
   outline = false,
   icon,
+  disabled = false,
 }: {
   title: string
   onPress: () => void
   outline?: boolean
   icon?: keyof typeof Ionicons.glyphMap
+  disabled?: boolean
 }) {
   const c = usePalette()
   return (
     <Pressable
       onPress={onPress}
+      disabled={disabled}
+      accessibilityRole="button"
+      accessibilityState={{ disabled }}
       style={{
         padding: 15,
         backgroundColor: outline ? c.card : c.accent,
@@ -196,6 +203,7 @@ export function Button({
         justifyContent: 'center',
         gap: 8,
         marginTop: 10,
+        opacity: disabled ? 0.55 : 1,
       }}
     >
       <Text style={{ color: outline ? c.accent : c.bg, fontWeight: '800' }}>

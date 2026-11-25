@@ -1,6 +1,7 @@
 export type Role = 'admin' | 'contributor' | 'viewer'
 export type Space = { id: string; name: string; role: Role }
 export type Event = {
+  location?: string
   id: string
   space_id: string
   title: string
@@ -19,6 +20,7 @@ export type Event = {
   created_at: string
 }
 export type Photo = {
+  created_by?: string
   id: string
   event_id: string
   description: string | null

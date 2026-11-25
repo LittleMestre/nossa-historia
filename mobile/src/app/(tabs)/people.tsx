@@ -3,13 +3,14 @@ import { router } from 'expo-router'
 import { useApp } from '@/lib/app-context'
 import { Screen, Button, Empty, usePalette } from '@/components/ui'
 export default function People() {
-  const { data, active, busy } = useApp(),
+  const { data, active, busy, demo } = useApp(),
     c = usePalette()
   return (
     <Screen title="Pessoas">
-      {active?.role !== 'viewer' && (
+      {demo && active && active.role !== 'viewer' && (
         <Button
           title="Cadastrar pessoa"
+          disabled={demo && busy}
           onPress={() => router.push('/editor?kind=person')}
         />
       )}

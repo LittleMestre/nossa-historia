@@ -1,13 +1,43 @@
-import { Text, View } from 'react-native'
+import { useState } from 'react'
+import { Alert, Text, View } from 'react-native'
 import { router, useLocalSearchParams } from 'expo-router'
 import { Button, Empty, PhotoGrid, Screen, usePalette } from '@/components/ui'
 import { useApp } from '@/lib/app-context'
+import { confirmDemoAction, pickDemoPhotos } from '@/lib/demo-actions'
 import { eventDate } from '@/lib/model'
 export default function EventDetail() {
   const { id } = useLocalSearchParams<{ id: string }>()
-  const { data, active, user } = useApp()
+  const { data, active, actor, demoActions, busy } = useApp()
   const c = usePalette()
+  const [picking, setPicking] = useState(false)
   const event = data.events.find((item) => item.id === id)
+  async function addPhotos() {
+    if (!demoActions || busy || picking) return
+    setPicking(true)
+    try {
+      const assets = await pickDemoPhotos()
+      if (assets.length) await demoActions.addPhotos(id, assets)
+    } catch (cause) {
+      Alert.alert(
+        'Não foi possível adicionar fotos',
+        cause instanceof Error ? cause.message : 'Tente novamente.',
+      )
+    } finally {
+      setPicking(false)
+    }
+  }
+  function deleteEvent() {
+    if (!demoActions) return
+    confirmDemoAction(
+      'Excluir acontecimento?',
+      'O acontecimento e suas fotos serão ocultados nesta família.',
+      'Excluir',
+      async () => {
+        await demoActions.deleteEvent(id)
+        router.dismissTo('/events')
+      },
+    )
+  }
   if (!event)
     return (
       <Screen title="Acontecimento indisponível">
@@ -42,28 +72,45 @@ export default function EventDetail() {
           {eventDate(event)}
         </Text>
         <Text style={{ color: c.muted, marginTop: 8 }}>
-          {data.categories[event.category_id ?? ''] ?? 'Momento especial'}
+          {
+            { family: 'Familiar', individual: 'Individual', other: 'Outro' }[
+              event.moment_type
+            ]
+          }{' '}
+          · {data.categories[event.category_id ?? ''] ?? 'Sem categoria'}
         </Text>
         <Text
           style={{ color: c.ink, fontSize: 16, lineHeight: 25, marginTop: 22 }}
         >
+          {event.location ? event.location + '\n' : ''}
           {event.description || 'Nenhuma descrição foi adicionada.'}
         </Text>
-        {(active?.role === 'admin' ||
-          (active?.role === 'contributor' &&
-            event.created_by === user?.id)) && (
+        {demoActions &&
+          (active?.role === 'admin' ||
+            (active?.role === 'contributor' && event.created_by === actor)) && (
+            <Button
+              title="Editar acontecimento"
+              outline
+              disabled={!!demoActions && (busy || picking)}
+              onPress={() =>
+                router.push({
+                  pathname: '/editor',
+                  params: { kind: 'event', id: event.id },
+                })
+              }
+            />
+          )}
+        {demoActions && active?.role !== 'viewer' && (
           <Button
-            title="Editar acontecimento"
-            outline
-            onPress={() =>
-              router.push({
-                pathname: '/editor',
-                params: { kind: 'event', id: event.id },
-              })
+            title={
+              picking ? 'Selecionando fotografias…' : 'Adicionar fotografias'
             }
+            icon="images-outline"
+            disabled={busy || picking}
+            onPress={() => void addPhotos()}
           />
         )}
-        <PhotoGrid photos={photos} max={60} />
+        <PhotoGrid photos={photos} max={photos.length} />
       </View>
       <Text
         style={{
@@ -96,6 +143,16 @@ export default function EventDetail() {
       ) : (
         <Text style={{ color: c.muted }}>Nenhuma pessoa vinculada.</Text>
       )}
+      {demoActions &&
+        (active?.role === 'admin' ||
+          (active?.role === 'contributor' && event.created_by === actor)) && (
+          <Button
+            title="Excluir acontecimento"
+            outline
+            disabled={busy || picking}
+            onPress={deleteEvent}
+          />
+        )}
     </Screen>
   )
 }

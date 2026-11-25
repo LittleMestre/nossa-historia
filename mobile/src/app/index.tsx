@@ -1,11 +1,21 @@
 import { Redirect, router } from 'expo-router'
-import { Image, Text } from 'react-native'
+import { useState } from 'react'
+import { Alert, Image, Text } from 'react-native'
 import { Screen, Button, usePalette } from '@/components/ui'
 import { useApp } from '@/lib/app-context'
 export default function Welcome() {
   const { enterDemo, user, demo, active } = useApp()
+  const [opening, setOpening] = useState(false)
   const c = usePalette()
   if (demo || user) return <Redirect href={active ? '/spiral' : '/spaces'} />
+  function enter(examples: boolean) {
+    setOpening(true)
+    void enterDemo(examples)
+      .catch((e) =>
+        Alert.alert('Falha ao abrir armazenamento local', e.message),
+      )
+      .finally(() => setOpening(false))
+  }
   return (
     <Screen title="Nossa História" eyebrow="ÁLBUM DE FAMÍLIA">
       <Image
@@ -29,14 +39,26 @@ export default function Welcome() {
         Revisite os encontros, as pessoas e as fotografias da sua família.
       </Text>
       <Button
-        title="Entrar na minha conta"
+        title={
+          opening
+            ? 'Abrindo armazenamento local…'
+            : 'Nova história · famílias neste aparelho'
+        }
+        disabled={opening}
+        onPress={() => enter(false)}
+      />
+      <Button
+        outline
+        title="Entrar com Supabase"
+        disabled={opening}
         onPress={() => router.push('/login')}
       />
       <Button
         outline
-        title="Explorar demonstração"
+        title="Explorar exemplos fictícios"
+        disabled={opening}
         onPress={() => {
-          enterDemo()
+          enter(true)
         }}
       />
     </Screen>

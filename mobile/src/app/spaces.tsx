@@ -1,3 +1,5 @@
+import { useState } from 'react'
+import { LocalField } from '@/components/LocalField'
 import { ActivityIndicator, Pressable, Text, View } from 'react-native'
 import { Redirect, router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
@@ -5,9 +7,34 @@ import { Button, Empty, Screen, usePalette } from '@/components/ui'
 import { useApp } from '@/lib/app-context'
 
 export default function Spaces() {
-  const { demo, user, spaces, active, busy, selectSpace, refresh, error } =
-    useApp()
+  const {
+    demo,
+    user,
+    spaces,
+    active,
+    busy,
+    selectSpace,
+    refresh,
+    error,
+    demoActions,
+    identity,
+    examples,
+  } = useApp()
   const c = usePalette()
+  const [name, setName] = useState('')
+  const [display, setDisplay] = useState('')
+  const [email, setEmail] = useState('')
+  const [message, setMessage] = useState('')
+  async function create() {
+    if (!demoActions) return
+    try {
+      await demoActions.create(name, identity ?? { name: display, email })
+      setName('')
+      router.replace('/spiral')
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : 'Falha ao criar família.')
+    }
+  }
   if (!demo && !user) return <Redirect href="/login" />
   return (
     <Screen title="Espaços familiares" eyebrow="ESCOLHA SUA FAMÍLIA">
@@ -19,14 +46,20 @@ export default function Spaces() {
         <Empty
           icon="people-outline"
           title="Nenhum espaço por aqui"
-          detail="Entre em uma conta vinculada a um espaço familiar ou aceite um convite pela web."
+          detail={
+            demo
+              ? 'Crie a primeira família neste aparelho.'
+              : 'Entre em uma conta vinculada a um espaço familiar ou aceite um convite pela web.'
+          }
         />
       )}
       {spaces.map((space) => (
         <Pressable
           key={space.id}
           onPress={() => {
-            void selectSpace(space).then(() => router.replace('/spiral'))
+            void selectSpace(space)
+              .then(() => router.replace('/spiral'))
+              .catch((e) => setMessage(e.message))
           }}
           style={{
             backgroundColor: c.card,
@@ -67,7 +100,40 @@ export default function Spaces() {
           <Ionicons name="chevron-forward" size={20} color={c.muted} />
         </Pressable>
       ))}
-      {active?.role === 'admin' && (
+      {demoActions && !examples && (!active || active.role === 'admin') && (
+        <>
+          {!identity && (
+            <>
+              <LocalField
+                label="Seu nome de exibição"
+                value={display}
+                onChangeText={setDisplay}
+                maxLength={160}
+              />
+              <LocalField
+                label="E-mail local (opcional)"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+            </>
+          )}
+          <LocalField
+            label="Nome da nova família"
+            value={name}
+            onChangeText={setName}
+            maxLength={120}
+          />
+          <Button
+            title="Criar família vazia"
+            disabled={busy}
+            onPress={() => void create()}
+          />
+        </>
+      )}
+      {!!message && <Text style={{ color: c.ink }}>{message}</Text>}
+      {!demo && active?.role === 'admin' && (
         <Text style={{ color: c.muted }}>
           Membros e convites · gerenciamento disponível na versão web.
         </Text>
