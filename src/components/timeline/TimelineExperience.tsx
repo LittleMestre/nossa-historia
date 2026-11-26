@@ -67,17 +67,11 @@ export function TimelineExperience({
         </div>
       </header>
       <div className="timeline-utility">
-        <div className="timeline-search">
-          <Search size={18} />
-          <input
-            type="search"
-            placeholder="Encontre uma pessoa, lugar ou ocasião"
-            aria-label="Pesquisa de memórias, disponível em breve"
-            disabled
-          />
-          <span>Busca em breve</span>
-        </div>
-        <Link to="/galeria">
+        <Link className="timeline-search" to="/buscar">
+          <Search size={18} aria-hidden="true" />
+          <span>Buscar por título ou descrição</span>
+        </Link>
+        <Link className="timeline-gallery-link" to="/galeria">
           Explorar galeria <ArrowUpRight size={17} />
         </Link>
       </div>

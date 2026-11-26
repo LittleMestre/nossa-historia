@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as BuscarRouteImport } from './routes/buscar'
 import { Route as ConviteRouteImport } from './routes/convite'
 import { Route as ConvitesRouteImport } from './routes/convites'
 import { Route as DemoEspiralRouteImport } from './routes/demo-espiral'
@@ -32,6 +33,11 @@ import { Route as ParticipantesPersonIdRouteImport } from './routes/participante
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BuscarRoute = BuscarRouteImport.update({
+  id: '/buscar',
+  path: '/buscar',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ConviteRoute = ConviteRouteImport.update({
@@ -127,6 +133,7 @@ const ParticipantesPersonIdRoute = ParticipantesPersonIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/buscar': typeof BuscarRoute
   '/convite': typeof ConviteRoute
   '/convites': typeof ConvitesRoute
   '/demo-espiral': typeof DemoEspiralRoute
@@ -148,6 +155,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/buscar': typeof BuscarRoute
   '/convite': typeof ConviteRoute
   '/convites': typeof ConvitesRoute
   '/demo-espiral': typeof DemoEspiralRoute
@@ -170,6 +178,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/buscar': typeof BuscarRoute
   '/convite': typeof ConviteRoute
   '/convites': typeof ConvitesRoute
   '/demo-espiral': typeof DemoEspiralRoute
@@ -193,6 +202,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/buscar'
     | '/convite'
     | '/convites'
     | '/demo-espiral'
@@ -214,6 +224,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/buscar'
     | '/convite'
     | '/convites'
     | '/demo-espiral'
@@ -235,6 +246,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/buscar'
     | '/convite'
     | '/convites'
     | '/demo-espiral'
@@ -257,6 +269,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  BuscarRoute: typeof BuscarRoute
   ConviteRoute: typeof ConviteRoute
   ConvitesRoute: typeof ConvitesRoute
   DemoEspiralRoute: typeof DemoEspiralRoute
@@ -284,6 +297,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/buscar': {
+      id: '/buscar'
+      path: '/buscar'
+      fullPath: '/buscar'
+      preLoaderRoute: typeof BuscarRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/convite': {
@@ -417,6 +437,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  BuscarRoute: BuscarRoute,
   ConviteRoute: ConviteRoute,
   ConvitesRoute: ConvitesRoute,
   DemoEspiralRoute: DemoEspiralRoute,

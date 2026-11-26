@@ -1057,7 +1057,7 @@ h3 {
     right: 0;
     z-index: 25;
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     padding: 8px max(8px, env(safe-area-inset-left))
       calc(8px + env(safe-area-inset-bottom))
       max(8px, env(safe-area-inset-right));
@@ -1325,26 +1325,23 @@ h3 {
   border-radius: 12px;
   background: var(--card);
   color: var(--muted-foreground);
-}
-.timeline-search input {
-  min-width: 0;
-  flex: 1;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  color: var(--foreground);
   font-size: 13px;
-  cursor: not-allowed;
+  text-decoration: none;
+  cursor: pointer;
 }
-.timeline-search span {
+.timeline-search:hover,
+.timeline-search:focus-visible {
+  border-color: var(--primary);
+  color: var(--foreground);
+}
+.timeline-search:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+.timeline-search svg {
   flex: none;
-  color: var(--warm);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
 }
-.timeline-utility > a,
+.timeline-gallery-link,
 .timeline-afterword a {
   display: inline-flex;
   align-items: center;
@@ -1354,7 +1351,7 @@ h3 {
   font-weight: 700;
   white-space: nowrap;
 }
-.timeline-utility > a:hover,
+.timeline-gallery-link:hover,
 .timeline-afterword a:hover {
   color: var(--warm);
 }
@@ -1966,14 +1963,11 @@ h3 {
   .timeline-utility {
     gap: 8px;
   }
-  .timeline-search span {
-    display: none;
-  }
-  .timeline-utility > a {
+  .timeline-gallery-link {
     font-size: 0;
     gap: 0;
   }
-  .timeline-utility > a svg {
+  .timeline-gallery-link svg {
     width: 20px;
     height: 20px;
   }
