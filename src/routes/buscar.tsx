@@ -1,26 +1,25 @@
 import { useQuery } from '@tanstack/react-query'
 import { createFileRoute, Link } from '@tanstack/react-router'
-import {
-  ChevronLeft,
-  ChevronRight,
-  LoaderCircle,
-  Search,
-  X,
-} from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { CalendarDays, LoaderCircle, Search, UsersRound } from 'lucide-react'
+import { Tabs } from 'radix-ui'
+import { useId, useRef, useState } from 'react'
 import { EmptyState } from '../components/EmptyState'
 import { PageHeading } from '../components/layout/PageHeading'
+import { PeopleSearch } from '../components/search/PeopleSearch'
+import { SearchField } from '../components/search/SearchField'
+import { SearchPagination } from '../components/search/SearchPagination'
+import { useSearchText } from '../components/search/useSearchText'
 import { Button } from '../components/ui/button'
 import { momentLabel } from '../features/events/model'
 import {
-  eventSearchPageSize,
-  eventSearchTextLimit,
   eventSearchYearSchema,
   getEventSearchCategories,
   searchEvents,
 } from '../features/events/search'
 import { emptyTimelineFilters } from '../features/events/timeline-filters'
 import type { TimelineFilters } from '../features/events/timeline-filters'
+import type { SearchPerson } from '../features/people/search'
+import type { SearchScope } from '../features/search/model'
 
 export const Route = createFileRoute('/buscar')({ component: SearchPage })
 
@@ -28,7 +27,7 @@ function SearchPage() {
   const { user, activeSpace } = Route.useRouteContext()
   if (!user || !activeSpace) return null
   return (
-    <EventSearch
+    <SearchExperience
       key={`${user.id}:${activeSpace.id}`}
       scope={{ userId: user.id, spaceId: activeSpace.id }}
       spaceName={activeSpace.name}
@@ -36,32 +35,121 @@ function SearchPage() {
   )
 }
 
-function EventSearch({
+function SearchExperience({
   scope,
   spaceName,
 }: {
-  scope: { userId: string; spaceId: string }
+  scope: SearchScope
   spaceName: string
 }) {
-  const [input, setInput] = useState('')
-  const [debouncedText, setDebouncedText] = useState('')
+  const [tab, setTab] = useState('events')
+  const [person, setPerson] = useState<SearchPerson | null>(null)
+  const [page, setPage] = useState(0)
+  const eventTab = useRef<HTMLButtonElement>(null)
+
+  function selectPerson(nextPerson: SearchPerson | null) {
+    setPerson(nextPerson)
+    setPage(0)
+  }
+
+  return (
+    <div className="inner-page">
+      <PageHeading
+        eyebrow="Capítulos da família"
+        title="Buscar memórias"
+        description={`Encontre acontecimentos e pessoas de ${spaceName}.`}
+      />
+      <Tabs.Root value={tab} onValueChange={setTab} activationMode="manual">
+        <Tabs.List
+          aria-label="Tipo de busca"
+          className="mt-5 inline-flex max-w-full flex-wrap gap-1 rounded-xl border bg-card p-1"
+        >
+          <Tabs.Trigger asChild value="events">
+            <Button
+              ref={eventTab}
+              type="button"
+              variant="ghost"
+              size="lg"
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              <CalendarDays aria-hidden="true" /> Acontecimentos
+            </Button>
+          </Tabs.Trigger>
+          <Tabs.Trigger asChild value="people">
+            <Button
+              type="button"
+              variant="ghost"
+              size="lg"
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              <UsersRound aria-hidden="true" /> Pessoas
+            </Button>
+          </Tabs.Trigger>
+        </Tabs.List>
+        <Tabs.Content
+          forceMount
+          value="events"
+          className="data-[state=inactive]:hidden"
+        >
+          <EventSearch
+            scope={scope}
+            active={tab === 'events'}
+            person={person}
+            onPersonChange={selectPerson}
+            page={page}
+            setPage={setPage}
+          />
+        </Tabs.Content>
+        <Tabs.Content
+          forceMount
+          value="people"
+          className="data-[state=inactive]:hidden"
+        >
+          <PeopleSearch
+            scope={scope}
+            active={tab === 'people'}
+            onSelect={(selected) => {
+              selectPerson(selected)
+              setTab('events')
+              eventTab.current?.focus()
+            }}
+          />
+        </Tabs.Content>
+      </Tabs.Root>
+    </div>
+  )
+}
+
+function EventSearch({
+  scope,
+  active,
+  person,
+  onPersonChange,
+  page,
+  setPage,
+}: {
+  scope: SearchScope
+  active: boolean
+  person: SearchPerson | null
+  onPersonChange: (person: SearchPerson | null) => void
+  page: number
+  setPage: (page: number) => void
+}) {
   const [dateMode, setDateMode] = useState('all')
   const [yearInput, setYearInput] = useState('')
   const [filters, setFilters] = useState(emptyTimelineFilters)
-  const [page, setPage] = useState(0)
+  const [picking, setPicking] = useState(false)
+  const pickerId = useId()
+  const pickerButton = useRef<HTMLButtonElement>(null)
   const searchInput = useRef<HTMLInputElement>(null)
   const resultsHeading = useRef<HTMLHeadingElement>(null)
-
-  const text = input.trim()
-  useEffect(() => {
-    if (!text) return
-    const timer = window.setTimeout(() => setDebouncedText(text), 350)
-    return () => window.clearTimeout(timer)
-  }, [text])
+  const { input, text, waitingForText, changeText } = useSearchText(() =>
+    setPage(0),
+  )
+  const personId = person?.id ?? null
 
   const year = eventSearchYearSchema.safeParse(Number(yearInput))
   const invalidYear = dateMode === 'year' && !year.success
-  const waitingForText = !!text && text !== debouncedText
   const searchFilters = {
     ...filters,
     year:
@@ -72,40 +160,37 @@ function EventSearch({
           : null,
   }
   const hasFilters =
-    dateMode !== 'all' || !!filters.categoryId || !!filters.momentType
+    dateMode !== 'all' ||
+    !!filters.categoryId ||
+    !!filters.momentType ||
+    !!personId
   const canSearch = (!!text || hasFilters) && !invalidYear
   const categories = useQuery({
     queryKey: ['event-search-categories', scope],
     queryFn: ({ signal }) => getEventSearchCategories({ data: scope, signal }),
+    enabled: active,
     gcTime: 0,
     retry: false,
   })
   const results = useQuery({
-    queryKey: ['event-search', scope, text, searchFilters, page],
+    queryKey: ['event-search', scope, text, searchFilters, personId, page],
     queryFn: ({ signal }) =>
       searchEvents({
-        data: { ...scope, text, filters: searchFilters, page },
+        data: { ...scope, text, filters: searchFilters, personId, page },
         signal,
       }),
-    enabled: canSearch && !waitingForText,
+    enabled: active && canSearch && !waitingForText,
     gcTime: 0,
     retry: false,
   })
   const result =
     canSearch && !waitingForText && !results.isError ? results.data : undefined
-  const pageCount = result ? Math.ceil(result.total / eventSearchPageSize) : 0
-
-  function changeText(value: string) {
-    if (value.trim() !== text) setPage(0)
-    setInput(value)
-    if (!value.trim()) setDebouncedText('')
-  }
-
   function clearFilters() {
     setDateMode('all')
     setYearInput('')
     setFilters(emptyTimelineFilters)
-    setPage(0)
+    setPicking(false)
+    onPersonChange(null)
   }
 
   function resetSearch() {
@@ -120,56 +205,18 @@ function EventSearch({
   }
 
   return (
-    <div className="inner-page">
-      <PageHeading
-        eyebrow="Capítulos da família"
-        title="Buscar memórias"
-        description={`Encontre acontecimentos de ${spaceName}.`}
-      />
+    <>
       <section
         className="event-panel space-y-5"
         aria-label="Pesquisa e filtros"
       >
-        <div>
-          <label
-            className="mb-2 block text-sm font-medium"
-            htmlFor="memory-search"
-          >
-            Título ou descrição
-          </label>
-          <div className="flex items-center gap-2">
-            <div className="relative min-w-0 flex-1">
-              <Search
-                size={18}
-                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                aria-hidden="true"
-              />
-              <input
-                id="memory-search"
-                ref={searchInput}
-                className="event-input pl-10!"
-                value={input}
-                maxLength={eventSearchTextLimit}
-                onChange={(event) => changeText(event.target.value)}
-                placeholder="Ex.: Natal de 2024"
-              />
-            </div>
-            {input && (
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                aria-label="Limpar pesquisa"
-                onClick={() => {
-                  changeText('')
-                  searchInput.current?.focus()
-                }}
-              >
-                <X aria-hidden="true" />
-              </Button>
-            )}
-          </div>
-        </div>
+        <SearchField
+          inputRef={searchInput}
+          label="Título ou descrição"
+          placeholder="Ex.: Natal de 2024"
+          value={input}
+          onChange={changeText}
+        />
 
         <fieldset className="grid items-start gap-4 sm:grid-cols-3">
           <legend className="mb-3 text-sm font-semibold">
@@ -297,6 +344,59 @@ function EventSearch({
             </select>
           </div>
         </fieldset>
+        <fieldset className="min-w-0 space-y-3 border-t pt-3">
+          <legend className="pr-2 text-sm font-semibold">
+            Pessoa participante
+          </legend>
+          <div className="flex flex-wrap items-center gap-2">
+            {person && (
+              <span className="event-tag wrap-anywhere">
+                {person.name}
+                {person.nickname && ` · ${person.nickname}`}
+              </span>
+            )}
+            <Button
+              ref={pickerButton}
+              type="button"
+              variant="outline"
+              aria-expanded={picking}
+              aria-controls={pickerId}
+              onClick={() => setPicking(!picking)}
+            >
+              {picking
+                ? 'Fechar seleção'
+                : person
+                  ? 'Trocar pessoa'
+                  : 'Selecionar pessoa'}
+            </Button>
+            {person && (
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => {
+                  onPersonChange(null)
+                  pickerButton.current?.focus()
+                }}
+              >
+                Remover pessoa
+              </Button>
+            )}
+          </div>
+          <div id={pickerId} hidden={!picking}>
+            {picking && (
+              <PeopleSearch
+                scope={scope}
+                active={active}
+                picker
+                onSelect={(selected) => {
+                  onPersonChange(selected)
+                  setPicking(false)
+                  pickerButton.current?.focus()
+                }}
+              />
+            )}
+          </div>
+        </fieldset>
         <Button
           type="button"
           variant="outline"
@@ -412,36 +512,15 @@ function EventSearch({
             Os resultados mudaram. Volte à primeira página para continuar.
           </p>
         )}
-        {result && (pageCount > 1 || page > 0) && (
-          <nav
-            aria-label="Paginação dos resultados"
-            className="mt-5 flex flex-wrap items-center gap-3"
-          >
-            <Button
-              type="button"
-              variant="outline"
-              disabled={page === 0}
-              onClick={() => changePage(result.events.length ? page - 1 : 0)}
-            >
-              <ChevronLeft aria-hidden="true" />{' '}
-              {result.events.length ? 'Anterior' : 'Primeira página'}
-            </Button>
-            {result.events.length > 0 && (
-              <span className="text-sm text-muted-foreground">
-                Página {page + 1} de {pageCount}
-              </span>
-            )}
-            <Button
-              type="button"
-              variant="outline"
-              disabled={page + 1 >= pageCount}
-              onClick={() => changePage(page + 1)}
-            >
-              Próxima <ChevronRight aria-hidden="true" />
-            </Button>
-          </nav>
+        {result && (
+          <SearchPagination
+            page={page}
+            total={result.total}
+            hasRows={result.events.length > 0}
+            onPageChange={changePage}
+          />
         )}
       </section>
-    </div>
+    </>
   )
 }

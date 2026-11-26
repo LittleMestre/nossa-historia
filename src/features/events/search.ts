@@ -1,42 +1,25 @@
 import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
-import { createSupabaseServerClient } from '../../lib/supabase/server'
-import { getSpaceState } from '../spaces/spaces'
+import { searchContext } from '../search/context.server'
+import {
+  literalPattern,
+  searchInputSchema,
+  searchPageSize,
+  searchScopeSchema,
+} from '../search/model'
 import { eventInputSchema, formatEventDate } from './model'
 import type { TimelineFilters } from './timeline-filters'
 
-export const eventSearchPageSize = 20
-export const eventSearchTextLimit = 200
 export const eventSearchYearSchema = z.number().int().min(1000).max(9999)
 
-const scopeSchema = z.object({ userId: z.uuid(), spaceId: z.uuid() })
 const filtersSchema = z.object({
   year: z.union([eventSearchYearSchema, z.literal('undated')]).nullable(),
   categoryId: z.uuid().nullable(),
   momentType: eventInputSchema.shape.moment_type.nullable(),
 }) satisfies z.ZodType<TimelineFilters>
 
-async function searchContext(scope: z.infer<typeof scopeSchema>) {
-  const supabase = createSupabaseServerClient()
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser()
-  if (error || user?.id !== scope.userId) throw new Error('Sua sessão mudou.')
-  const { activeSpace } = await getSpaceState()
-  if (activeSpace?.id !== scope.spaceId)
-    throw new Error('O espaço ativo mudou.')
-  return { supabase, spaceId: activeSpace.id }
-}
-
-// PostgreSQL's (?q) treats the remaining pattern literally. Quote it separately
-// for PostgREST's logical filter syntax.
-function literalPattern(text: string) {
-  return `"(?q)${text.replace(/[\\"]/g, '\\$&')}"`
-}
-
 export const getEventSearchCategories = createServerFn({ method: 'GET' })
-  .validator(scopeSchema)
+  .validator(searchScopeSchema)
   .handler(async ({ data }) => {
     const { supabase, spaceId } = await searchContext(data)
     const { data: categories, error } = await supabase
@@ -50,38 +33,34 @@ export const getEventSearchCategories = createServerFn({ method: 'GET' })
 
 export const searchEvents = createServerFn({ method: 'POST' })
   .validator(
-    scopeSchema.extend({
-      text: z
-        .string()
-        .trim()
-        .max(eventSearchTextLimit)
-        .refine((text) => !text.includes('\0')),
+    searchInputSchema.extend({
       filters: filtersSchema,
-      page: z
-        .number()
-        .int()
-        .min(0)
-        .max(
-          Math.floor(
-            (Number.MAX_SAFE_INTEGER - eventSearchPageSize) /
-              eventSearchPageSize,
-          ),
-        ),
+      personId: z.uuid().nullable().default(null),
     }),
   )
   .handler(async ({ data }) => {
     const { supabase, spaceId } = await searchContext(data)
-    const { text, filters, page } = data
-    const query = supabase
-      .from('events')
-      .select(
-        'id, title, description, date_precision, start_year, start_month, start_day, end_year, end_month, end_day, approximate_date_label, moment_type, categories(name)',
-        { count: 'exact' },
-      )
+    const { text, filters, page, personId } = data
+    const fields =
+      'id, title, description, date_precision, start_year, start_month, start_day, end_year, end_month, end_day, approximate_date_label, moment_type, categories(name)'
+    const eventsTable = supabase.from('events')
+    const query = (
+      personId
+        ? eventsTable.select(
+            `${fields}, participants:event_participants!inner()`,
+            { count: 'exact' },
+          )
+        : eventsTable.select(fields, { count: 'exact' })
+    )
       .eq('space_id', spaceId)
       .is('deleted_at', null)
       .is('parent_event_id', null)
 
+    if (personId) {
+      query
+        .eq('participants.space_id', spaceId)
+        .eq('participants.person_id', personId)
+    }
     if (text) {
       const pattern = literalPattern(text)
       query.or(`title.imatch.${pattern},description.imatch.${pattern}`)
@@ -96,7 +75,7 @@ export const searchEvents = createServerFn({ method: 'POST' })
     if (filters.categoryId) query.eq('category_id', filters.categoryId)
     if (filters.momentType) query.eq('moment_type', filters.momentType)
 
-    const offset = page * eventSearchPageSize
+    const offset = page * searchPageSize
     const {
       data: events,
       count,
@@ -107,7 +86,7 @@ export const searchEvents = createServerFn({ method: 'POST' })
       .order('start_day', { ascending: false, nullsFirst: false })
       .order('created_at', { ascending: false })
       .order('id')
-      .range(offset, offset + eventSearchPageSize - 1)
+      .range(offset, offset + searchPageSize - 1)
     if (error || count === null)
       throw new Error('Não foi possível buscar os acontecimentos.')
     return {
