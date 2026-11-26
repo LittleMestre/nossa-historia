@@ -10,6 +10,7 @@ import {
   CalendarDays,
   GalleryHorizontalEnd,
   Home,
+  Search,
   Settings2,
   UsersRound,
 } from 'lucide-react'
@@ -22,6 +23,7 @@ const navigation = [
   { to: '/linha-do-tempo', label: 'Linha do tempo', icon: CalendarDays },
   { to: '/galeria', label: 'Galeria', icon: GalleryHorizontalEnd },
   { to: '/eventos', label: 'Eventos', icon: BookHeart },
+  { to: '/buscar', label: 'Buscar', icon: Search },
   { to: '/participantes', label: 'Pessoas', icon: UsersRound },
 ] as const
 
